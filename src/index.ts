@@ -1,5 +1,24 @@
 import { Iso } from './isomap'
 
+
+/**
+ * 
+ * @param event 
+ * @returns 
+ */
+    function getMousePosition(event:MouseEvent):Iso.Position|null {
+    const canvas = event.target as HTMLCanvasElement|null;
+
+    if( canvas == null ) return null
+
+    const rect = canvas.getBoundingClientRect()
+
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    }
+}
+
 // isometric map settings
 const params:Iso.MapParameters = {
     screen: { width: 1024, height: 768 },
@@ -11,8 +30,19 @@ const params:Iso.MapParameters = {
 const isoMap = new Iso.Map(params);
 isoMap.create();
 
-// draw shape
-isoMap.drawPrism({ x: 5, y: 6});
-isoMap.drawPrism({ x: 8, y: 7});
+isoMap.canvas.addEventListener('mousedown', (event) => {
+        const mousePosition = getMousePosition(event)
+
+        if( mousePosition != null ) {
+            const isometricPosition = isoMap.convertScreenToIsometric(mousePosition.x, mousePosition.y)
+
+            if( isoMap.isOnMap(isometricPosition) ) {
+                isoMap.drawPrism(isometricPosition);
+            }
+
+        }
+
+}, false);
+
 
 

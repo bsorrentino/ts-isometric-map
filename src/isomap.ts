@@ -21,7 +21,7 @@ export namespace Iso {
    
     export class Map {
 
-        canvas:HTMLCanvasElement
+        private _canvas:HTMLCanvasElement
         context:CanvasRenderingContext2D
         color:string
         screen:Iso.Size
@@ -40,7 +40,7 @@ export namespace Iso {
             const context = canvas.getContext('2d')
             if( context == null ) throw new Error("2d context from canvas is null!")
             
-            this.canvas = canvas
+            this._canvas = canvas
             this.context = context
     
             // tiles color
@@ -72,12 +72,19 @@ export namespace Iso {
         }
     
         /**
+         * 
+         */
+        get canvas():HTMLCanvasElement {
+            return this._canvas
+        }
+
+        /**
          * @desc draw isometric map
          */
         create() {
             // set canvas size
-            this.canvas.setAttribute('width', `${this.screen.width}`);
-            this.canvas.setAttribute('height', `${this.screen.height}`);
+            this._canvas.setAttribute('width', `${this.screen.width}`);
+            this._canvas.setAttribute('height', `${this.screen.height}`);
     
             // tiles drawing loops
             for (let i = 0; i < this.map.width; i++) {
@@ -89,10 +96,7 @@ export namespace Iso {
                     this.drawTile(x, y);
                 }
             }
-    
-            // add event listeners
-            this.addListeners();
-        };
+        }
     
         /**
          * @desc draw single tile
@@ -181,27 +185,7 @@ export namespace Iso {
             this.context.fillStyle = '#777777';
             this.context.fill();
         }
-    
-        /**
-         * @desc init map listeners
-         */
-        addListeners() {
-    
-            this.canvas.addEventListener('mousedown', (event) => {
-                const mousePosition = getMousePosition(event);
 
-                if( mousePosition != null ) {
-                    const isometricPosition = this.convertScreenToIsometric(mousePosition.x, mousePosition.y);
-    
-                    if( isOnMap(isometricPosition, this.map)) {
-                        this.drawPrism(isometricPosition);
-                    }
-    
-                }
-
-            }, false);
-    
-        }
     
         convertScreenToIsometric(x:number, y:number):Iso.Position{
             x = (x - this.position.x) / this.tile.width;
@@ -220,41 +204,17 @@ export namespace Iso {
             return { x: screenX, y: screenY};
         };
     
+        /**
+         * 
+         * @param position 
+         * @returns 
+         */
+        isOnMap(position:Iso.Position):boolean  {
+            return  (position.x >= 0 && position.x < this.map.width 
+                && position.y >= 0 && position.y < this.map.height) 
+        }
     
     }
-
-    /**
-     * 
-     * @param event 
-     * @returns 
-     */
-    function getMousePosition(event:MouseEvent):Iso.Position|null {
-        const canvas = event.target as HTMLCanvasElement|null;
-
-        if( canvas == null ) return null
-
-        const rect = canvas.getBoundingClientRect()
-
-        return {
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top
-        }
-    }
-
-    /**
-     * 
-     * @param position 
-     * @param map 
-     * @returns 
-     */
-    export function isOnMap(position:Iso.Position, map:Iso.Size):boolean  {
-        if (position.x >= 0 && position.x < map.width 
-            && position.y >= 0 && position.y < map.height) {
-                return true;
-        } else {
-            return false;
-        }
-    };
 
 }
 
