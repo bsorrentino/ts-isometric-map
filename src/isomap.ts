@@ -1,10 +1,12 @@
 
 export namespace Iso {
 
-    export type Position = {
+    export type MapPosition = {
         x:number
         y:number
     }
+    
+    export type ScreenPosition = MapPosition
 
     export type Size = {
         width:number
@@ -19,16 +21,126 @@ export namespace Iso {
         color?:string
     }
    
-    export class Map {
+    export interface Entity {
+        
+        mapPos:MapPosition
+        screenPos:ScreenPosition
+
+        render():void
+    }
+
+    class Tile implements Entity { 
+
+        screenPos:Iso.ScreenPosition = {x:0, y:0}
+
+        constructor( public mapPos:MapPosition, private map:Map) {}
+    
+        render():void {
+            const { context, tile: {width, height, color } } = this.map
+    
+            // begin
+            context.beginPath()
+    
+            // move to start point
+            context.moveTo(this.mapPos.x - width / 2, this.mapPos.y)
+    
+            /**
+             * create four lines
+             * --------------------------------------------
+             *    step 1  |  step 2  |  step 3  |  step 4
+             * --------------------------------------------
+             *    /       |  /       |  /       |  /\  
+             *            |  \       |  \/      |  \/
+             * --------------------------------------------
+             */
+            context.lineTo(this.mapPos.x - width, this.mapPos.y + height / 2)
+            context.lineTo(this.mapPos.x - width / 2, this.mapPos.y + height)
+            context.lineTo(this.mapPos.x, this.mapPos.y + height / 2)
+            context.lineTo(this.mapPos.x - width / 2,  this.mapPos.y)
+    
+            // draw path
+            context.stroke()
+    
+            // fill tile
+            context.fillStyle = color
+            context.fill() 
+             
+        }
+    }
+    class Prism implements Entity {
+
+        screenPos:ScreenPosition
+
+        /**
+         * 
+         * @param x - map x position
+         * @param y - map y position
+         * @param map 
+         */
+        constructor( public mapPos:MapPosition, private map:Map, screen?:ScreenPosition) {
+            
+            this.screenPos = ( screen ) ? screen : map.convertIsometricToScreen(mapPos)
+        }
+
+        render() {
+            const {x,y} = this.map.convertIsometricToScreen(this.mapPos)
+
+            const { context, tile: {width, height, color } } = this.map
+    
+            // top
+            context.beginPath()
+    
+            context.moveTo(x - width / 2, y - height)
+            context.lineTo(x - width, y - height / 2)
+            context.lineTo(x - width / 2, y)
+            context.lineTo(x, y - height / 2)
+            context.lineTo(x - width / 2,  y - height)
+    
+            context.fillStyle = '#555555'
+            context.fill()
+    
+            // left
+            context.beginPath()
+    
+            context.moveTo(x - width, y - height / 2)
+            context.lineTo(x - width, y + height / 2)
+            context.lineTo(x - width / 2, y + height)
+            context.lineTo(x - width / 2, y)
+            context.lineTo(x - width, y - height / 2)
+    
+            context.fillStyle = '#444444'
+            context.fill()
+    
+            // right
+            context.beginPath()
+    
+            context.moveTo(x - width / 2, y)
+            context.lineTo(x, y - height / 2)
+            context.lineTo(x, y + height / 2)
+            context.lineTo(x - width / 2, y + height)
+            context.lineTo(x - width / 2, y)
+    
+            context.fillStyle = '#777777'
+            context.fill()            
+        }
+    }
+
+    export class Map implements Entity {
 
         private _canvas:HTMLCanvasElement
         context:CanvasRenderingContext2D
-        color:string
-        screen:Iso.Size
+        screenPos:Iso.ScreenPosition = {x:0, y:0}
+
+        screenSize:Iso.Size
         map:Iso.Size
-        tile:Iso.Size
-        position:Iso.Position
-    
+        tile:Iso.Size & { color:string }
+
+        mapPos:MapPosition
+
+        renderLayers:[ Array<Entity>, Array<Entity> ] = [  [], [] ]
+
+        gameLoopItnterval?:NodeJS.Timer
+
         /**
          * @desc constructor
          * @param object $params - initial parameters
@@ -36,18 +148,16 @@ export namespace Iso {
         constructor(params:MapParameters) {
 
             const canvas = document.getElementById(params.canvasId ?? 'canvas') as HTMLCanvasElement|null
+
             if( canvas == null ) throw new Error("canvas is null!")
             const context = canvas.getContext('2d')
             if( context == null ) throw new Error("2d context from canvas is null!")
             
             this._canvas = canvas
             this.context = context
-    
-            // tiles color
-            this.color = params.color ?? '#15B89A';
-    
+        
             // canvas area details
-            this.screen = { 
+            this.screenSize = { 
                 width: params.screen.width,
                 height: params.screen.height
              };
@@ -61,14 +171,13 @@ export namespace Iso {
             // size of single tile
             this.tile = {
                 width: params.tile.width,
-                height: params.tile.height
+                height: params.tile.height,
+                color: params.color ?? '#15B89A'
             }
     
             // initial position of isometric map
-            this.position = {
-                x: this.screen.width / 2,
-                y: this.tile.height
-            }
+            this.mapPos = { x:this.screenSize.width / 2, y: this.tile.height }
+            
         }
     
         /**
@@ -83,136 +192,109 @@ export namespace Iso {
          */
         create() {
             // set canvas size
-            this._canvas.setAttribute('width', `${this.screen.width}`);
-            this._canvas.setAttribute('height', `${this.screen.height}`);
-    
+            this._canvas.setAttribute('width', `${this.screenSize.width}`);
+            this._canvas.setAttribute('height', `${this.screenSize.height}`);
+
             // tiles drawing loops
             for (let i = 0; i < this.map.width; i++) {
                 for ( let j = 0; j < this.map.height; j++) {
                     // calculate coordinates
-                    var x = (i-j) * this.tile.width / 2 + this.position.x;
-                    var y = (i+j) * this.tile.height / 2 + this.position.y;
+                    const pos = {
+                        x: (i-j) * this.tile.width / 2 + this.mapPos.x,
+                        y: (i+j) * this.tile.height / 2 + this.mapPos.y
+                    }
                     // draw single tile
-                    this.drawTile(x, y);
+
+                    this._addTile( pos )
                 }
             }
+            
+            this.gameLoopItnterval = setInterval( () => this.render(), 500 )
         }
     
+        render():void {
+
+            this.renderLayers[0].forEach( v =>  v.render() )
+            this.renderLayers[1].forEach( v =>  v.render() )
+
+        }
+        
         /**
-         * @desc draw single tile
+         * @desc add a single tile to a layer
          * @param int $x - position x on canvas area
          * @param int $y - position y on canvas area
+         * @param layer 
          */
-        drawTile(x:number, y:number) {
-            
-            const tileWidth = this.tile.width;
-            const tileHeight = this.tile.height;
-    
-    
-            // begin
-            this.context.beginPath();
-    
-            // move to start point
-            this.context.moveTo(x - tileWidth / 2, y);
-    
-            /**
-             * create four lines
-             * --------------------------------------------
-             *    step 1  |  step 2  |  step 3  |  step 4
-             * --------------------------------------------
-             *    /       |  /       |  /       |  /\  
-             *            |  \       |  \/      |  \/
-             * --------------------------------------------
-             */
-            this.context.lineTo(x - tileWidth, y + tileHeight / 2);
-            this.context.lineTo(x - tileWidth / 2, y + tileHeight);
-            this.context.lineTo(x, y + tileHeight / 2);
-            this.context.lineTo(x - tileWidth / 2,  y);
-    
-            // draw path
-            this.context.stroke();
-    
-            // fill tile
-            this.context.fillStyle = this.color;
-            this.context.fill();   
+        private _addTile = ( map:MapPosition, layer = 0):Tile => {
+            const result = new Tile( map, this )
+            this.renderLayers[layer].push( result )
+            return result
         }
-    
+
+        private _sortLayer = ( layer:number ) => 
+            this.renderLayers[layer].sort( ($1,$2) => {
+                const dy = $1.screenPos.y - $2.screenPos.y 
+                if( dy === 0 ) {
+                    return $2.screenPos.x - $1.screenPos.x
+                }
+                return dy
+            })
+        
+
         /**
-         * @desc draw single shape - prism
-         * @param object $isometricPosition - position on map { x: value, y: value }
+         * add single prism to a layer
+         * @param x - position x on canvas area
+         * @param y - position y on canvas area
+         * @param layer 
          */
-        drawPrism(isometricPosition:Iso.Position) {
+        addPrism = ( screen:ScreenPosition, layer = 1 ):Prism|undefined =>  {
 
-            const screenPosition = this.convertIsometricToScreen(isometricPosition.x, isometricPosition.y);
-            const x = screenPosition.x;
-            const y = screenPosition.y;
-            const tileWidth = this.tile.width;
-            const tileHeight = this.tile.height;
+            const map = this.convertScreenToIsometric(screen)
+
+            if( this.isOnMap(map) ) {
+                const result = new Prism( map, this, screen )
+                this.renderLayers[layer].push( result )
+                this._sortLayer(layer)
+                return result
     
-            // top
-            this.context.beginPath();
-    
-            this.context.moveTo(x - tileWidth / 2, y - tileHeight);
-            this.context.lineTo(x - tileWidth, y - tileHeight / 2);
-            this.context.lineTo(x - tileWidth / 2, y);
-            this.context.lineTo(x, y - tileHeight / 2);
-            this.context.lineTo(x - tileWidth / 2,  y - tileHeight);
-    
-            this.context.fillStyle = '#555555';
-            this.context.fill();
-    
-            // left
-            this.context.beginPath();
-    
-            this.context.moveTo(x - tileWidth, y - tileHeight / 2);
-            this.context.lineTo(x - tileWidth, y + tileHeight / 2);
-            this.context.lineTo(x - tileWidth / 2, y + tileHeight);
-            this.context.lineTo(x - tileWidth / 2, y);
-            this.context.lineTo(x - tileWidth, y - tileHeight / 2);
-    
-            this.context.fillStyle = '#444444';
-            this.context.fill();
-    
-            // right
-            this.context.beginPath();
-    
-            this.context.moveTo(x - tileWidth / 2, y);
-            this.context.lineTo(x, y - tileHeight / 2);
-            this.context.lineTo(x, y + tileHeight / 2);
-            this.context.lineTo(x - tileWidth / 2, y + tileHeight);
-            this.context.lineTo(x - tileWidth / 2, y);
-    
-            this.context.fillStyle = '#777777';
-            this.context.fill();
+            }
         }
 
+        /**
+         * 
+         * @param screen 
+         * @returns 
+         */
+        convertScreenToIsometric( screen:ScreenPosition ):Iso.MapPosition{
+            
+            const x = (screen.x - this.mapPos.x) / this.tile.width
+            const y = (screen.y - this.mapPos.y) / this.tile.height
     
-        convertScreenToIsometric(x:number, y:number):Iso.Position{
-            x = (x - this.position.x) / this.tile.width;
-            y = (y - this.position.y) / this.tile.height;
-    
-            var isoX = Math.floor(y + x) 
-            var isoY = Math.floor(y - x) 
-    
-           return { x: isoX, y: isoY };
-        };
-    
-        convertIsometricToScreen(x:number, y:number):Iso.Position {
-            var screenX = ( (x-y) * this.tile.width / 2 ) + this.position.x;
-            var screenY = ( (x+y) * this.tile.height / 2 ) + this.position.y;
-    
-            return { x: screenX, y: screenY};
-        };
+           return { x: Math.floor(y + x) , y: Math.floor(y - x)  }
+        }
+
+        /**
+         * 
+         * @param map 
+         * @returns 
+         */
+        convertIsometricToScreen = ( map:MapPosition ):Iso.ScreenPosition  => (
+            {
+                x: ( (map.x-map.y) * this.tile.width / 2 ) + this.mapPos.x,
+                y: ( (map.x+map.y) * this.tile.height / 2 ) + this.mapPos.y
+
+            })
+
     
         /**
          * 
          * @param position 
          * @returns 
          */
-        isOnMap(position:Iso.Position):boolean  {
-            return  (position.x >= 0 && position.x < this.map.width 
-                && position.y >= 0 && position.y < this.map.height) 
-        }
+        isOnMap = (position:Iso.MapPosition):boolean  => 
+                (position.x >= 0 && position.x < this.map.width 
+                    && position.y >= 0 && position.y < this.map.height) 
+        
     
     }
 

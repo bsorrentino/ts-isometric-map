@@ -6,7 +6,7 @@ import { Iso } from './isomap'
  * @param event 
  * @returns 
  */
-    function getMousePosition(event:MouseEvent):Iso.Position|null {
+    function getMousePosition(event:MouseEvent):Iso.MapPosition|null {
     const canvas = event.target as HTMLCanvasElement|null;
 
     if( canvas == null ) return null
@@ -34,12 +34,8 @@ isoMap.canvas.addEventListener('mousedown', (event) => {
         const mousePosition = getMousePosition(event)
 
         if( mousePosition != null ) {
-            const isometricPosition = isoMap.convertScreenToIsometric(mousePosition.x, mousePosition.y)
-
-            if( isoMap.isOnMap(isometricPosition) ) {
-                isoMap.drawPrism(isometricPosition);
-            }
-
+            
+            isoMap.addPrism(mousePosition);
         }
 
 }, false);
