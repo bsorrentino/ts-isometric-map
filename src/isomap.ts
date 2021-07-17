@@ -26,7 +26,6 @@ export namespace Iso {
    
     export interface Entity {
         
-        mapPos:MapPosition
         screenPos:ScreenPosition
 
         render():void
@@ -34,18 +33,17 @@ export namespace Iso {
 
     class Tile implements Entity { 
 
-        screenPos:Iso.ScreenPosition = {x:0, y:0}
-
-        constructor( public mapPos:MapPosition, private map:TileMap) {}
+        constructor( public screenPos:MapPosition, private map:TileMap) {}
     
         render():void {
+            const  { x, y } = this.screenPos
             const { context, tile: {width, height, color } } = this.map
     
             // begin
             context.beginPath()
     
             // move to start point
-            context.moveTo(this.mapPos.x - width / 2, this.mapPos.y)
+            context.moveTo(x - width / 2, y)
     
             /**
              * create four lines
@@ -56,10 +54,10 @@ export namespace Iso {
              *            |  \       |  \/      |  \/
              * --------------------------------------------
              */
-            context.lineTo(this.mapPos.x - width, this.mapPos.y + height / 2)
-            context.lineTo(this.mapPos.x - width / 2, this.mapPos.y + height)
-            context.lineTo(this.mapPos.x, this.mapPos.y + height / 2)
-            context.lineTo(this.mapPos.x - width / 2,  this.mapPos.y)
+            context.lineTo(x - width, y + height / 2)
+            context.lineTo(x - width / 2, y + height)
+            context.lineTo(x, y + height / 2)
+            context.lineTo(x - width / 2,  y)
     
             // draw path
             context.stroke()
@@ -73,21 +71,17 @@ export namespace Iso {
 
     class Prism implements Entity {
 
-        screenPos:ScreenPosition
-
         /**
          * 
          * @param x - map x position
          * @param y - map y position
          * @param map 
          */
-        constructor( public mapPos:MapPosition, private map:TileMap, screen?:ScreenPosition) {
-            
-            this.screenPos = ( screen ) ? screen : map.convertIsometricToScreen(mapPos)
+        constructor( public screenPos:ScreenPosition, private map:TileMap) {
         }
 
         render() {
-            const {x,y} = this.map.convertIsometricToScreen(this.mapPos)
+            const {x,y} = this.screenPos
 
             const { context, tile: {width, height, color } } = this.map
     
@@ -139,6 +133,7 @@ export namespace Iso {
         }
 
         render():void {
+            // if( this.source.loading ) return
             const { x, y } = this.mapPos
             this.map.context.drawImage( this.source, x, y  )
         }
@@ -217,13 +212,10 @@ export namespace Iso {
             this._canvas.setAttribute('height', `${this.screenSize.height}`);
 
             // tiles drawing loops
-            for (let i = 0; i < this.mapSize.width; i++) {
-                for ( let j = 0; j < this.mapSize.height; j++) {
+            for (let x = 0; x < this.mapSize.width; x++) {
+                for ( let y = 0; y < this.mapSize.height; y++) {
                     // calculate coordinates
-                    const pos = {
-                        x: (i-j) * this.tile.width / 2 + this.mapPos.x,
-                        y: (i+j) * this.tile.height / 2 + this.mapPos.y
-                    }
+                    const pos = this.convertIsometricToScreen( {x:x, y:y }) 
                     // draw single tile
 
                     this._addTile( pos )
@@ -273,7 +265,7 @@ export namespace Iso {
             const map = this.convertScreenToIsometric(screen)
 
             if( this.isOnMap(map) ) {
-                const result = new Prism( map, this, screen )
+                const result = new Prism( this.convertIsometricToScreen(map), this )
                 this.renderLayers[layer].push( result )
                 this._sortLayer(layer)
                 return result
@@ -322,24 +314,30 @@ export namespace Iso {
          * @param path 
          * @returns 
          */
-        loadImage = ( path:string ):HTMLImageElement => {
+        loadImages( ...paths: string[] )  {
 
-            const basename = _basename(path)
-            if( !basename ) throw Error( `image path: ${path} is not valid!`)
-
-            let result = new Image()
-            result.src = path
-            result.onload = ( event:any ) => {
-                console.log( `image from path: ${path} loaded`, event )
-                this.images.set( basename, result)
-            }
-
-            return result;
+            paths.forEach( path => {
+                const basename = _basename(path)
+                
+                if( basename ) {
+                    let result = new Image()
+                    result.src = path
+                    result.onload = ( event:any ) => {
+                        console.log( `image ${basename} from path: ${path} loaded`, event )
+                    }
+                    this.images.set( basename, result)
+                }
+                else {
+                    console.warn( `image path: ${path} is not valid!` )
+                    // throw Error( `image path: ${path} is not valid!`)
+                }
+    
+            })
         }
                    
         addImage = ( basename:string, screenPos:ScreenPosition, layer = 1  ) => {
             const img = this.images.get( basename )
-
+            
             if( img ) {
                 const result = new ImageEntity( img, screenPos, this )
                 this.renderLayers[layer].push( result )

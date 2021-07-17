@@ -29,7 +29,7 @@ const params:Iso.MapParameters = {
 // create map
 const isoMap = new Iso.TileMap(params);
 isoMap.create();
-isoMap.loadImage( '/assets/man-ne.png' )
+isoMap.loadImages( '/assets/man-ne.png', '/assets/man-nw.png', '/assets/man-se.png',' /assets/man-sw.png' )
 
 isoMap.canvas.addEventListener('mousedown', (event) => {
         const mousePosition = getMousePosition(event)
@@ -37,9 +37,9 @@ isoMap.canvas.addEventListener('mousedown', (event) => {
         if( mousePosition != null ) {
             
             isoMap.addPrism(mousePosition);
-            // isoMap.addImage( 'man-ne', mousePosition )
+ 
         }
-
 }, false);
 
+isoMap.addImage( 'man-ne', isoMap.convertIsometricToScreen( {x:298, y:108 } ) )
 
