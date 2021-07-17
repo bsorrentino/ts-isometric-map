@@ -2,7 +2,7 @@
   "name": "isometric.js",
   "version": "1.0.0",
   "description": "",
-  "main": "docs/demo/index.html",
+  "main": "docs/index.html",
   "scripts": {
     "start":"parcel serve ./src/index.html",
     "build":"parcel build ./src/index.html" 
