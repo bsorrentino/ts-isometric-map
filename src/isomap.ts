@@ -1,12 +1,15 @@
 
-export namespace Iso {
 
+export namespace Iso {
     export type MapPosition = {
         x:number
         y:number
     }
     
-    export type ScreenPosition = MapPosition
+    export type ScreenPosition = {
+        x:number
+        y:number
+    }
 
     export type Size = {
         width:number
@@ -15,8 +18,8 @@ export namespace Iso {
 
     export type MapParameters = {
         screen:Size
-        map:Size
-        tile:Size
+        mapSize:Size
+        tileSize:Size
         canvasId?:string
         color?:string
     }
@@ -33,7 +36,7 @@ export namespace Iso {
 
         screenPos:Iso.ScreenPosition = {x:0, y:0}
 
-        constructor( public mapPos:MapPosition, private map:Map) {}
+        constructor( public mapPos:MapPosition, private map:TileMap) {}
     
         render():void {
             const { context, tile: {width, height, color } } = this.map
@@ -67,6 +70,7 @@ export namespace Iso {
              
         }
     }
+
     class Prism implements Entity {
 
         screenPos:ScreenPosition
@@ -77,7 +81,7 @@ export namespace Iso {
          * @param y - map y position
          * @param map 
          */
-        constructor( public mapPos:MapPosition, private map:Map, screen?:ScreenPosition) {
+        constructor( public mapPos:MapPosition, private map:TileMap, screen?:ScreenPosition) {
             
             this.screenPos = ( screen ) ? screen : map.convertIsometricToScreen(mapPos)
         }
@@ -125,14 +129,29 @@ export namespace Iso {
         }
     }
 
-    export class Map implements Entity {
+    class ImageEntity implements Entity {
+
+        mapPos:MapPosition
+
+        constructor( public source:HTMLImageElement, public screenPos:MapPosition, private map:TileMap) {
+
+            this.mapPos = this.map.convertScreenToIsometric( screenPos )
+        }
+
+        render():void {
+            const { x, y } = this.mapPos
+            this.map.context.drawImage( this.source, x, y  )
+        }
+    }
+
+    export class TileMap implements Entity {
 
         private _canvas:HTMLCanvasElement
         context:CanvasRenderingContext2D
         screenPos:Iso.ScreenPosition = {x:0, y:0}
 
         screenSize:Iso.Size
-        map:Iso.Size
+        mapSize:Iso.Size
         tile:Iso.Size & { color:string }
 
         mapPos:MapPosition
@@ -140,6 +159,8 @@ export namespace Iso {
         renderLayers:[ Array<Entity>, Array<Entity> ] = [  [], [] ]
 
         gameLoopItnterval?:NodeJS.Timer
+
+        images = new Map<string,HTMLImageElement>()
 
         /**
          * @desc constructor
@@ -163,15 +184,15 @@ export namespace Iso {
              };
     
             // size of isometric map
-            this.map = {
-                width: params.map.width,
-                height: params.map.height
+            this.mapSize = {
+                width: params.mapSize.width,
+                height: params.mapSize.height
             };
     
             // size of single tile
             this.tile = {
-                width: params.tile.width,
-                height: params.tile.height,
+                width: params.tileSize.width,
+                height: params.tileSize.height,
                 color: params.color ?? '#15B89A'
             }
     
@@ -196,8 +217,8 @@ export namespace Iso {
             this._canvas.setAttribute('height', `${this.screenSize.height}`);
 
             // tiles drawing loops
-            for (let i = 0; i < this.map.width; i++) {
-                for ( let j = 0; j < this.map.height; j++) {
+            for (let i = 0; i < this.mapSize.width; i++) {
+                for ( let j = 0; j < this.mapSize.height; j++) {
                     // calculate coordinates
                     const pos = {
                         x: (i-j) * this.tile.width / 2 + this.mapPos.x,
@@ -292,11 +313,60 @@ export namespace Iso {
          * @returns 
          */
         isOnMap = (position:Iso.MapPosition):boolean  => 
-                (position.x >= 0 && position.x < this.map.width 
-                    && position.y >= 0 && position.y < this.map.height) 
-        
-    
+                (position.x >= 0 && position.x < this.mapSize.width 
+                    && position.y >= 0 && position.y < this.mapSize.height) 
+
+
+        /**
+         * 
+         * @param path 
+         * @returns 
+         */
+        loadImage = ( path:string ):HTMLImageElement => {
+
+            const basename = _basename(path)
+            if( !basename ) throw Error( `image path: ${path} is not valid!`)
+
+            let result = new Image()
+            result.src = path
+            result.onload = ( event:any ) => {
+                console.log( `image from path: ${path} loaded`, event )
+                this.images.set( basename, result)
+            }
+
+            return result;
+        }
+                   
+        addImage = ( basename:string, screenPos:ScreenPosition, layer = 1  ) => {
+            const img = this.images.get( basename )
+
+            if( img ) {
+                const result = new ImageEntity( img, screenPos, this )
+                this.renderLayers[layer].push( result )
+                this._sortLayer(layer)
+                return result
+            }
+
+        }
     }
+
+    /**
+     * 
+     * @param path 
+     * @returns 
+     */
+    const _basename = ( path:string ):string|undefined => {
+        const elem = path.split("/")
+        if( elem.length > 0 ) {
+            const last = elem[ elem.length - 1]
+            const result = /(.+)[.](.+)$/.exec(last)    
+            if( result != null ) {
+                return result[1]
+            }
+        }
+
+    } 
+
 
 }
 

@@ -22,13 +22,14 @@ import { Iso } from './isomap'
 // isometric map settings
 const params:Iso.MapParameters = {
     screen: { width: 1024, height: 768 },
-    map: { width: 14, height: 14 },
-    tile: { width: 64, height: 32 }
+    mapSize: { width: 14, height: 14 },
+    tileSize: { width: 64, height: 32 }
 }
 
 // create map
-const isoMap = new Iso.Map(params);
+const isoMap = new Iso.TileMap(params);
 isoMap.create();
+isoMap.loadImage( '/assets/man-ne.png' )
 
 isoMap.canvas.addEventListener('mousedown', (event) => {
         const mousePosition = getMousePosition(event)
@@ -36,9 +37,9 @@ isoMap.canvas.addEventListener('mousedown', (event) => {
         if( mousePosition != null ) {
             
             isoMap.addPrism(mousePosition);
+            // isoMap.addImage( 'man-ne', mousePosition )
         }
 
 }, false);
-
 
 
