@@ -9,7 +9,7 @@ This project helps to understand the basic concept behind the **isometric world*
 Inspired by project [isometric-map](https://github.com/rtatol/isometric-map) from 
 Rafał Tatol](https://github.com/rtatol)
 
-[Demo](http://bsorrentino.github.io/ts-isometric-map/demo)
+[Demo](http://bsorrentino.github.io/ts-isometric-map/)
 
 ## References
 
