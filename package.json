@@ -1,11 +1,11 @@
 {
-  "name": "isometric.js",
+  "name": "ts-isometric-map",
   "version": "1.0.0",
   "description": "",
-  "main": "docs/index.html",
+  "main": "docs/demo/index.html",
   "scripts": {
     "start":"parcel serve ./src/index.html",
-    "build":"parcel build ./src/index.html" 
+    "build":"parcel build --public-url ts-isometric-map/demo ./src/index.html" 
   },
   "keywords": [],
   "author": "",
