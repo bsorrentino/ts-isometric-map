@@ -2,9 +2,10 @@
   "name": "isometric.js",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "docs/demo/index.html",
   "scripts": {
-    "start":"parcel serve index.html"
+    "start":"parcel serve ./src/index.html",
+    "build":"parcel build ./src/index.html" 
   },
   "keywords": [],
   "author": "",
