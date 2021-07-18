@@ -120,7 +120,7 @@ export class TileMap implements Entity {
         for (let x = 0; x < this.mapSize.width; x++) {
             for ( let y = 0; y < this.mapSize.height; y++) {
                 // calculate coordinates
-                const pos = this.convertIsometricToScreen( {x:x, y:y }) 
+                const pos = this.convertIsoToScreen( {x:x, y:y }) 
                 // draw single tile
 
                 this._addTile( pos )
@@ -172,7 +172,7 @@ export class TileMap implements Entity {
      */
     addEntity = <T extends Entity>( entity:T, layer = 1 ):boolean =>  {
 
-        const map = this.convertScreenToIsometric(entity.screenPos)
+        const map = this.convertScreenToIso(entity.screenPos)
 
         if( this.isOnMap(map) ) {
             this.renderLayers[layer].push( entity )
@@ -189,7 +189,7 @@ export class TileMap implements Entity {
      * @param screen 
      * @returns 
      */
-    convertScreenToIsometric( screen:ScreenPosition ):MapPosition{
+    convertScreenToIso( screen:ScreenPosition ):MapPosition{
         
         const x = (screen.x - this.mapPos.x) / this.tile.width
         const y = (screen.y - this.mapPos.y) / this.tile.height
@@ -202,7 +202,7 @@ export class TileMap implements Entity {
      * @param map 
      * @returns 
      */
-    convertIsometricToScreen = ( map:MapPosition ):ScreenPosition  => (
+    convertIsoToScreen = ( map:MapPosition ):ScreenPosition  => (
         {
             x: ( (map.x-map.y) * this.tile.width / 2 ) + this.mapPos.x,
             y: ( (map.x+map.y) * this.tile.height / 2 ) + this.mapPos.y

@@ -42,7 +42,7 @@ isoMap.canvas.addEventListener('mousedown', (event) => {
         }
 }, false);
 
-const success = isoMap.addEntity(  new ImageEntity('man-ne', isoMap.convertIsometricToScreen( {x:0, y:0} ), isoMap ) )
+const success = isoMap.addEntity(  new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:0, y:0} ), isoMap ) )
 
 console.log( 'add image ', success )
 
