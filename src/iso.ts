@@ -119,11 +119,7 @@ export class TileMap implements Entity {
         // tiles drawing loops
         for (let x = 0; x < this.mapSize.width; x++) {
             for ( let y = 0; y < this.mapSize.height; y++) {
-                // calculate coordinates
-                const pos = this.convertIsoToScreen( {x:x, y:y }) 
-                // draw single tile
-
-                this._addTile( pos )
+                this._addTile( {x:x, y:y } )
             }
         }
         
@@ -144,7 +140,8 @@ export class TileMap implements Entity {
      * @param layer 
      */
     private _addTile = ( map:MapPosition, layer = 0):Tile => {
-        const result = new Tile( map, this )
+        const screen = this.convertIsoToScreen( map) 
+        const result = new Tile( screen, map, this )
         this.renderLayers[layer].push( result )
         return result
     }

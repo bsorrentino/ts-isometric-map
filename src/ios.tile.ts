@@ -1,8 +1,8 @@
-import { Entity, ScreenPosition, TileMap } from './iso'
+import { Entity, MapPosition, ScreenPosition, TileMap } from './iso'
 
 export class Tile implements Entity { 
 
-    constructor( public screenPos:ScreenPosition, private map:TileMap) {}
+    constructor( public screenPos:ScreenPosition, private mapPos:MapPosition, private map:TileMap) {}
 
     render():void {
         const  { x, y } = this.screenPos
@@ -31,9 +31,13 @@ export class Tile implements Entity {
         // draw path
         context.stroke()
 
+
         // fill tile
         context.fillStyle = color
         context.fill() 
             
+        context.fillStyle = 'black'
+        context.fillText( `${this.mapPos.x},${this.mapPos.y}`, x - 40, y + 20 )
+
     }
 }

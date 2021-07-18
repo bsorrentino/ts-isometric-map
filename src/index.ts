@@ -1,24 +1,7 @@
 import { MapParameters, TileMap, ScreenPosition } from './iso'
 import { Prism } from './iso.prism'
 import { Image as ImageEntity } from './iso.image'
-
-/**
- * 
- * @param event 
- * @returns 
- */
-    function getMousePosition(event:MouseEvent):ScreenPosition|null {
-    const canvas = event.target as HTMLCanvasElement|null;
-
-    if( canvas == null ) return null
-
-    const rect = canvas.getBoundingClientRect()
-
-    return {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
-    }
-}
+import { keyboard, mouse, getMousePositionRelativeToTarget } from './iso.input' 
 
 // isometric map settings
 const params:MapParameters = {
@@ -32,17 +15,47 @@ const isoMap = new TileMap(params);
 isoMap.create();
 isoMap.loadImages( '/assets/man-ne.png', '/assets/man-nw.png', '/assets/man-se.png',' /assets/man-sw.png' )
 
-isoMap.canvas.addEventListener('mousedown', (event) => {
-        const mousePosition = getMousePosition(event)
 
-        if( mousePosition != null ) {
-            
-            isoMap.addEntity( new Prism( mousePosition, isoMap) )
+let left = keyboard("ArrowLeft"),
+      up = keyboard("ArrowUp"),
+      right = keyboard("ArrowRight"),
+      down = keyboard("ArrowDown");
+
+const _mouse = mouse(isoMap.canvas)
+
+_mouse.press =  (event) => {
+        let pos = getMousePositionRelativeToTarget(event)
+
+        if( pos != null ) {
+            pos = isoMap.convertScreenToIso(pos) // adjust position on map
+                
+            isoMap.addEntity( new Prism( isoMap.convertIsoToScreen( pos ), isoMap) )
  
         }
-}, false);
+}
 
-const success = isoMap.addEntity(  new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:0, y:0} ), isoMap ) )
+const img = new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:0, y:0} ), isoMap )
+
+const success = isoMap.addEntity( img )
 
 console.log( 'add image ', success )
 
+left.press = () => {
+
+    console.log( 'left press' )
+}
+
+right.press = () => {
+
+    console.log( 'right press' )
+}
+
+up.press = () => {
+
+    console.log( 'up press' )
+}
+
+down.press = () => {
+
+    console.log( 'down press' )
+}

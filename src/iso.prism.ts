@@ -12,10 +12,7 @@ export class Prism implements Entity {
      * @param map 
      */
     constructor( public screenPos:ScreenPosition, private map:TileMap) {
-
-        // @TODO investigate why we need this
-        const pos = map.convertScreenToIso(screenPos)
-        this.screenPos = map.convertIsoToScreen( pos )
+        console.log( 'prism', screenPos )
     }
 
     render() {

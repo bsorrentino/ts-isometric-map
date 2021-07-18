@@ -5,6 +5,7 @@ export class Image implements Entity {
     source?:HTMLImageElement
 
     constructor(  private basename:string, public screenPos:ScreenPosition, private map:TileMap) {
+        console.log( 'image', screenPos )
 
         this.source =  map.images.get( basename )
     }
