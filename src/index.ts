@@ -14,7 +14,7 @@ const params:MapParameters = {
 // create map
 const isoMap = new TileMap(params);
 isoMap.create();
-isoMap.loadImages( '/assets/man-ne.png', '/assets/man-nw.png', '/assets/man-se.png',' /assets/man-sw.png' )
+isoMap.loadImages( 'assets/man-ne.png', 'assets/man-nw.png', 'assets/man-se.png',' assets/man-sw.png' )
 
 
 let left = keyboard("ArrowLeft"),
