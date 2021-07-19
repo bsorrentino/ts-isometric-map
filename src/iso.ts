@@ -2,15 +2,13 @@
 import { basename } from './iso.utils'
 import { Tile } from './ios.tile'
 
-export type MapPosition = {
+export type Position = {
     x:number
     y:number
 }
 
-export type ScreenPosition = {
-    x:number
-    y:number
-}
+export type MapPosition = Position
+export type ScreenPosition = Position
 
 export type Size = {
     width:number
@@ -31,11 +29,6 @@ export interface Entity {
 
     render():void
 }
-
-
-
-
-
 
 export class TileMap implements Entity {
 
@@ -206,7 +199,16 @@ export class TileMap implements Entity {
 
         })
 
-
+    /**
+     * 
+     * @param pos 
+     * @returns 
+     */
+    getTilePos = (pos:ScreenPosition):ScreenPosition => ({
+            x: pos.x - this.tile.width,
+            y: pos.y - (this.tile.height *2)    
+        })
+    
     /**
      * 
      * @param position 
