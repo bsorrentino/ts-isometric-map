@@ -83,7 +83,7 @@ class Mouse {
 }
 
 export const keyboard = ( value:KeyBoardValue, target:EventTarget = document ) => (new Key(value, target))
-export const mouse = ( target:Element ) => (new Mouse(target))
+export const mouse = ( target:Element = document.body ) => (new Mouse(target))
 
 /**
 * 

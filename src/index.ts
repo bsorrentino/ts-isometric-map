@@ -21,7 +21,7 @@ let left = keyboard("ArrowLeft"),
       right = keyboard("ArrowRight"),
       down = keyboard("ArrowDown");
 
-const _mouse = mouse(isoMap.canvas)
+const _mouse = mouse()
 
 _mouse.press =  (event) => {
         let pos = getMousePositionRelativeToTarget(event)
@@ -33,7 +33,7 @@ _mouse.press =  (event) => {
         }
 }
 
-const img = new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:0, y:0} ), isoMap )
+const img = new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:1, y:0} ), isoMap )
 
 const success = isoMap.addEntity( img )
 

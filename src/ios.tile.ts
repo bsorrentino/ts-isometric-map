@@ -2,7 +2,9 @@ import { Entity, MapPosition, ScreenPosition, TileMap } from './iso'
 
 export class Tile implements Entity { 
 
-    constructor( public screenPos:ScreenPosition, private mapPos:MapPosition, private map:TileMap) {}
+    constructor( public screenPos:ScreenPosition, private mapPos:MapPosition, private map:TileMap) {
+        console.log( `screen: [${this.screenPos.x},${this.screenPos.y}} - map:[${this.mapPos.x},${this.mapPos.y}]`)
+    }
 
     render():void {
         const  { x, y } = this.screenPos
@@ -35,7 +37,13 @@ export class Tile implements Entity {
         // fill tile
         context.fillStyle = color
         context.fill() 
-            
+    
+        // Debug
+
+        context.beginPath()
+        context.rect( x - width, y, width, height)
+        context.stroke()
+
         context.fillStyle = 'black'
         context.fillText( `${this.mapPos.x},${this.mapPos.y}`, x - 40, y + 20 )
 
