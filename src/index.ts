@@ -30,7 +30,6 @@ _mouse.press =  (event) => {
             pos = isoMap.convertScreenToIso(pos) // adjust position on map
                 
             isoMap.addEntity( new Prism( isoMap.convertIsoToScreen( pos ), isoMap) )
- 
         }
 }
 
@@ -40,22 +39,7 @@ const success = isoMap.addEntity( img )
 
 console.log( 'add image ', success )
 
-left.press = () => {
-
-    console.log( 'left press' )
-}
-
-right.press = () => {
-
-    console.log( 'right press' )
-}
-
-up.press = () => {
-
-    console.log( 'up press' )
-}
-
-down.press = () => {
-
-    console.log( 'down press' )
-}
+left.press = () => console.log( 'left press' )
+right.press = () => console.log( 'right press' )
+up.press = () => console.log( 'up press' )
+down.press = () => console.log( 'down press' )
