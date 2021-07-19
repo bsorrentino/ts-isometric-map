@@ -7,12 +7,11 @@ export class Tile implements Entity {
     }
 
     render():void {
-        // const  { x, y } = this.map.getTilePos(this.screenPos)
-        const  { x, y } = this.screenPos
+        const  { x, y } = this.screenPos // topRight
+        const  { x: x0, y: y0 } = this.map.getTilePos(this.screenPos) // bottomLeft
+        
         const { context, tile: {width, height, color } } = this.map
 
-        const x0 = x - width
-        const y0 = y + height
         const cx = x - width / 2
         const cy = y + height / 2
 

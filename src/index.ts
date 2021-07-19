@@ -1,11 +1,12 @@
 import { MapParameters, TileMap, ScreenPosition } from './iso'
 import { Prism } from './iso.prism'
+import { Person } from './ios.person'
 import { Image as ImageEntity } from './iso.image'
 import { keyboard, mouse, getMousePositionRelativeToTarget } from './iso.input' 
 
 // isometric map settings
 const params:MapParameters = {
-    screen: { width: 1024, height: 768 },
+    screen: { width: 1024, height: 800 },
     mapSize: { width: 14, height: 14 },
     tileSize: { width: 64, height: 32 }
 }
@@ -33,13 +34,38 @@ _mouse.press =  (event) => {
         }
 }
 
-const img = new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:1, y:0} ), isoMap )
+// const img = new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:1, y:0} ), isoMap )
+// isoMap.addEntity( img )
 
-const success = isoMap.addEntity( img )
+const person = new Person(  {x:1, y:1}, isoMap )
 
-console.log( 'add image ', success )
+isoMap.addEntity( person )
 
-left.press = () => console.log( 'left press' )
-right.press = () => console.log( 'right press' )
-up.press = () => console.log( 'up press' )
-down.press = () => console.log( 'down press' )
+left.press = () => {
+    person.move = 'left'
+}
+left.release = () => { 
+    person.move = 'none'
+}
+
+right.press = () => {
+    person.move = 'right'
+}
+right.release = () => { 
+    person.move = 'none'
+}
+
+up.press = () => {
+    person.move = 'up'
+}
+up.release = () => { 
+    person.move = 'none'
+}
+
+
+down.press = () => { 
+    person.move = 'down'
+}
+down.release = () => { 
+    person.move = 'none'
+}

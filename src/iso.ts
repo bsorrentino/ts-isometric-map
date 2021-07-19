@@ -83,7 +83,7 @@ export class TileMap implements Entity {
         }
 
         // initial position of isometric map
-        this.mapPos = { x:this.screenSize.width / 2, y: this.tile.height }
+        this.mapPos = { x:this.screenSize.width / 2, y: this.tile.height * 2 }
         
     }
 
@@ -120,8 +120,9 @@ export class TileMap implements Entity {
     }
 
     render():void {
-
+        this.clear()
         this.renderLayers[0].forEach( v =>  v.render() )
+        this._sortLayer(1)
         this.renderLayers[1].forEach( v =>  v.render() )
 
     }
@@ -166,7 +167,6 @@ export class TileMap implements Entity {
 
         if( this.isOnMap(map) ) {
             this.renderLayers[layer].push( entity )
-            this._sortLayer(layer)
             return true
 
         }
@@ -179,12 +179,15 @@ export class TileMap implements Entity {
      * @param screen 
      * @returns 
      */
-    convertScreenToIso( screen:ScreenPosition ):MapPosition{
+    convertScreenToIso( screen:ScreenPosition ):MapPosition {
         
         const x = (screen.x - this.mapPos.x) / this.tile.width
         const y = (screen.y - this.mapPos.y) / this.tile.height
 
-        return { x: Math.floor(y + x) , y: Math.floor(y - x)  }
+        return { 
+            x: Math.floor(y + x), 
+            y: Math.floor(y - x)  
+        }
     }
 
     /**
@@ -192,11 +195,9 @@ export class TileMap implements Entity {
      * @param map 
      * @returns 
      */
-    convertIsoToScreen = ( map:MapPosition ):ScreenPosition  => (
-        {
+    convertIsoToScreen = ( map:MapPosition ):ScreenPosition  => ({
             x: ( (map.x-map.y) * this.tile.width / 2 ) + this.mapPos.x,
             y: ( (map.x+map.y) * this.tile.height / 2 ) + this.mapPos.y
-
         })
 
     /**
@@ -206,9 +207,9 @@ export class TileMap implements Entity {
      */
     getTilePos = (pos:ScreenPosition):ScreenPosition => ({
             x: pos.x - this.tile.width,
-            y: pos.y - (this.tile.height *2)    
+            y: pos.y + this.tile.height
         })
-    
+
     /**
      * 
      * @param position 
@@ -244,6 +245,16 @@ export class TileMap implements Entity {
 
         })
     }
+
+    renderImage( basename:string, screenPos:ScreenPosition ):void {
+        const source = this.images.get( basename )
+
+        if( source ) {
+            const { x, y } = this.getTilePos(screenPos)
+            this.context.drawImage( source, x, y - source!.naturalHeight )    
+        }
+    }
+ 
 }
 
 
