@@ -7,14 +7,20 @@ export class Tile implements Entity {
     }
 
     render():void {
+        // const  { x, y } = this.map.getTilePos(this.screenPos)
         const  { x, y } = this.screenPos
         const { context, tile: {width, height, color } } = this.map
+
+        const x0 = x - width
+        const y0 = y + height
+        const cx = x - width / 2
+        const cy = y + height / 2
 
         // begin
         context.beginPath()
 
         // move to start point
-        context.moveTo(x - width / 2, y)
+        context.moveTo(cx, y)
 
         /**
          * create four lines
@@ -25,10 +31,10 @@ export class Tile implements Entity {
          *            |  \       |  \/      |  \/
          * --------------------------------------------
          */
-        context.lineTo(x - width, y + height / 2)
-        context.lineTo(x - width / 2, y + height)
-        context.lineTo(x, y + height / 2)
-        context.lineTo(x - width / 2,  y)
+        context.lineTo(x0, cy)
+        context.lineTo(cx, y0)
+        context.lineTo(x, cy)
+        context.lineTo(cx, y)
 
         // draw path
         context.stroke()
@@ -40,9 +46,9 @@ export class Tile implements Entity {
     
         // Debug
 
-        context.beginPath()
-        context.rect( x - width, y, width, height)
-        context.stroke()
+        // context.beginPath()
+        // context.rect( x0, y, width, height)
+        // context.stroke()
 
         context.fillStyle = 'black'
         context.fillText( `${this.mapPos.x},${this.mapPos.y}`, x - 40, y + 20 )
