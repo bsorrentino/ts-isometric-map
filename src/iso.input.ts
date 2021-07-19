@@ -45,35 +45,37 @@ class Key {
 }
 
 class Mouse {
-    isDown = false;
-    isUp = true;
     press?:( event:MouseEvent ) => void
     up?: ( event:MouseEvent ) => void
+    move?: ( event:MouseEvent ) => void
+
     unsubscribe:() => void
 
     constructor( target:Element ) {
 
         const downHandler = (event:MouseEvent) => {
-            if (this.isUp && this.press) this.press(event)
-            this.isDown = true
-            this.isUp = false
+            if (this.press) this.press(event)
             event.preventDefault()
         }
         
         const upHandler = (event:MouseEvent) => {
-            if (this.isDown && this.up) this.up(event)
-            this.isDown = false
-            this.isUp = true
+            if (this.up) this.up(event)
             event.preventDefault()
-          }
+        }
+
+        const moveHandler = (event:MouseEvent) => {
+          if (this.move) this.move(event)
+          event.preventDefault()
+        }
         
         target.addEventListener( 'mousedown', downHandler as EventListener, false )
         target.addEventListener( 'mouseup', upHandler as EventListener, false )
+        target.addEventListener( 'mousemove', moveHandler as EventListener, false )
     
         this.unsubscribe = () => {
             target.removeEventListener( 'mousedown', downHandler as EventListener, false )
             target.removeEventListener( 'mouseup', upHandler as EventListener, false )
-    
+            target.removeEventListener( 'mousemove', moveHandler as EventListener, false )
         }
 
         
