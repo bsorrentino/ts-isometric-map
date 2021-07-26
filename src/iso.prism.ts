@@ -15,6 +15,15 @@ export class Prism implements Entity {
         console.log( 'prism', screenPos )
     }
 
+    compare( e:Prism ):number {
+        
+        const dy = this.screenPos.y - e.screenPos.y 
+        if( dy === 0 ) {
+            return this.screenPos.x - e.screenPos.x
+        }
+        return dy
+    }
+
     render() {
         const {x,y} = this.screenPos
 

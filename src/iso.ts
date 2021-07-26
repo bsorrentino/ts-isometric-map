@@ -43,6 +43,8 @@ export interface Entity {
     screenPos:ScreenPosition
 
     render():void
+
+    compare( e:Entity ):number
 }
 
 export class TileMap implements Entity {
@@ -101,6 +103,10 @@ export class TileMap implements Entity {
         this.mapPos = { x:this.screenSize.width / 2, y: this.tile.height * 2 }
     }
 
+    compare( e:TileMap ):number {
+        return 0
+    }
+
     /**
      * 
      */
@@ -138,6 +144,7 @@ export class TileMap implements Entity {
      */
     render():void {
         this.clear()
+        this._sortLayer(0)
         this.renderLayers[0].forEach( v =>  v.render() )
         this._sortLayer(1)
         this.renderLayers[1].forEach( v =>  v.render() )
@@ -163,14 +170,8 @@ export class TileMap implements Entity {
      * @returns 
      */
     private _sortLayer = ( layer:number ) => 
-        this.renderLayers[layer].sort( ($1,$2) => {
-            const dy = $1.screenPos.y - $2.screenPos.y 
-            if( dy === 0 ) {
-                return $2.screenPos.x - $1.screenPos.x
-            }
-            return dy
-        })
-    
+        this.renderLayers[layer].sort( ($1,$2) => $1.compare($2) )
+
     /**
      * 
      * @param layer 
@@ -324,7 +325,7 @@ export class TileMap implements Entity {
         const source = this.images.get( basename )
 
         if( source ) {
-            const { bottomRight: {x, y} } = this.getTileRect(screenPos)
+            const { bottomLeft: {x, y} } = this.getTileRect(screenPos)
             this.context.drawImage( source, x, y - source!.naturalHeight )    
         }
     }

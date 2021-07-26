@@ -10,6 +10,15 @@ export class Person implements Entity {
         this.screenPos = map.convertIsoToScreen( mapPos )
     }
 
+    compare( e:Person ):number {
+        
+        const dy = this.screenPos.y - e.screenPos.y 
+        if( dy === 0 ) {
+            return this.screenPos.x - e.screenPos.x
+        }
+        return dy
+    }
+
     render():void {
 
         switch( this.move ) {

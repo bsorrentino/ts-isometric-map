@@ -8,6 +8,10 @@ export class Tile implements Entity {
         console.log( `screen: [${this.screenPos.x},${this.screenPos.y}} - map:[${this.mapPos.x},${this.mapPos.y}]`)
     }
 
+    compare( e:Tile ):number {
+        return ( e.highlight ) ? -1 : 0
+    }
+
     render():void {
 
         const v = this.map.getTileVertex(this.screenPos)
@@ -49,9 +53,10 @@ export class Tile implements Entity {
         context.fill() 
     
         // Debug
-        if( this.mapPos.x === 13 && this.mapPos.y === 13 )
+        if( this.highlight ) {
             this._drawTileRect()
-        this._drawMapPos()
+            this._drawMapPos()
+        }
 
         context.restore()
     }
