@@ -44,7 +44,7 @@ class Key {
   
 }
 
-class Mouse {
+export class Mouse {
     press?:( event:MouseEvent ) => void
     up?: ( event:MouseEvent ) => void
     move?: ( event:MouseEvent ) => void
@@ -80,25 +80,26 @@ class Mouse {
 
         
     }  
+
+    /**
+    * 
+    * @param event 
+    * @returns 
+    */
+    getMousePosition(event:MouseEvent):ScreenPosition|null {
+      const elem = event.target as Element|null;
+
+      if( elem == null ) return null
+
+      const rect = elem.getBoundingClientRect()
+
+      return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+      }
+  }
+
 }
 
 export const keyboard = ( value:KeyBoardValue, target:EventTarget = document ) => (new Key(value, target))
-export const mouse = ( target:Element = document.body ) => (new Mouse(target))
-
-/**
-* 
-* @param event 
-* @returns 
-*/
-export function getMousePositionRelativeToTarget(event:MouseEvent):ScreenPosition|null {
-   const elem = event.target as Element|null;
-
-   if( elem == null ) return null
-
-   const rect = elem.getBoundingClientRect()
-
-   return {
-       x: event.clientX - rect.left,
-       y: event.clientY - rect.top
-   }
-}
+export const mouse = ( target:Element ) => (new Mouse(target))

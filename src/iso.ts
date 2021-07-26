@@ -1,6 +1,7 @@
 
 import { basename } from './iso.utils'
 import { Tile } from './iso.tile'
+import { Mouse, mouse } from './iso.input'
 
 export type Position = {
     x:number
@@ -98,7 +99,6 @@ export class TileMap implements Entity {
 
         // initial position of isometric map
         this.mapPos = { x:this.screenSize.width / 2, y: this.tile.height * 2 }
-        
     }
 
     /**
@@ -171,6 +171,44 @@ export class TileMap implements Entity {
             return dy
         })
     
+    /**
+     * 
+     * @param layer 
+     * @param predicate 
+     * @returns 
+     */
+    private  _findEntity<T extends Entity>( layer:number, predicate:( entity:Entity, index:number ) => boolean ):T|undefined {
+        return this.renderLayers[layer].find( predicate ) as T
+    }
+
+    /**
+     * 
+     * @param screenPos 
+     */
+    findTileByScreenPos( screenPos:ScreenPosition ) {
+        return this._findEntity<Tile>( 0, ( e, i ) => {
+
+            const isoPos = this.convertScreenToIso(screenPos)
+            const { mapPos } = e as Tile
+
+            return mapPos.x === isoPos.x && mapPos.y === isoPos.y 
+
+        })
+    }
+
+    /**
+     * 
+     * @param screenPos 
+     */
+     findTileByIsoPos( isoPos:MapPosition ) {
+        return this._findEntity<Tile>( 0, ( e, i ) => {
+
+            const { mapPos } = e as Tile
+
+            return mapPos.x === isoPos.x && mapPos.y === isoPos.y 
+
+        })
+    }
 
     /**
      * add single prism to a layer
@@ -290,7 +328,7 @@ export class TileMap implements Entity {
             this.context.drawImage( source, x, y - source!.naturalHeight )    
         }
     }
- 
+
 }
 
 

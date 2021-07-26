@@ -1,8 +1,8 @@
-import { MapParameters, TileMap, ScreenPosition } from './iso'
+import { MapParameters, TileMap } from './iso'
+import { Tile } from './iso.tile'
 import { Prism } from './iso.prism'
 import { Person } from './iso.person'
-import { Image as ImageEntity } from './iso.image'
-import { keyboard, mouse, getMousePositionRelativeToTarget } from './iso.input' 
+import { keyboard, mouse } from './iso.input' 
 
 // isometric map settings
 const params:MapParameters = {
@@ -11,27 +11,53 @@ const params:MapParameters = {
     tileSize: { width: 64, height: 32 }
 }
 
+const outDiv = document.getElementById('debug')
+
 // create map
 const isoMap = new TileMap(params);
 isoMap.create();
 isoMap.loadImages( 'assets/man-ne.png', 'assets/man-nw.png', 'assets/man-se.png',' assets/man-sw.png' )
-
 
 let left = keyboard("ArrowLeft"),
       up = keyboard("ArrowUp"),
       right = keyboard("ArrowRight"),
       down = keyboard("ArrowDown");
 
-const _mouse = mouse()
+// const _mouse = mouse( isoMap.canvas )
+const _mouse = mouse( document.body )
 
 _mouse.press =  (event) => {
-        let pos = getMousePositionRelativeToTarget(event)
+        let pos = _mouse.getMousePosition(event)
 
         if( pos != null ) {
+
             pos = isoMap.convertScreenToIso(pos) // adjust position on map
                 
             isoMap.addEntity( new Prism( isoMap.convertIsoToScreen( pos ), isoMap) )
         }
+}
+
+let lastTile:Tile|undefined
+
+_mouse.move = (event) => {
+    const mousepos = _mouse.getMousePosition(event)
+
+    if( mousepos != null ) {
+
+        const pos = isoMap.convertScreenToIso(mousepos) // adjust position on map
+    
+        outDiv!.innerHTML = `[${mousepos.x},${mousepos.y}] - [${pos.x},${pos.y}]`
+        const tile = isoMap.findTileByIsoPos(pos)
+
+        if( tile ) {
+            if( lastTile ) {
+                lastTile.highlight = false
+            }
+            //console.log( `${tile.mapPos.x},${tile.mapPos.y}`)
+            lastTile = tile 
+            lastTile.highlight = true
+        }
+    }
 }
 
 // const img = new ImageEntity('man-ne', isoMap.convertIsoToScreen( {x:1, y:0} ), isoMap )

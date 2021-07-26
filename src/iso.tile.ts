@@ -4,7 +4,7 @@ export class Tile implements Entity {
 
     highlight = false
 
-    constructor( public screenPos:ScreenPosition, private mapPos:MapPosition, private map:TileMap) {
+    constructor( public screenPos:ScreenPosition, public mapPos:MapPosition, private map:TileMap) {
         console.log( `screen: [${this.screenPos.x},${this.screenPos.y}} - map:[${this.mapPos.x},${this.mapPos.y}]`)
     }
 
@@ -16,8 +16,8 @@ export class Tile implements Entity {
         
         const { context, tile: { color } } = this.map
 
-        // begin
-        context.beginPath()
+        context.save()
+
 
         /**
          * create four lines
@@ -29,31 +29,50 @@ export class Tile implements Entity {
          * --------------------------------------------
          */
 
+        // begin
+        context.beginPath()
         // move to start point
         context.moveTo(v.top.x, v.top.y)
         // define lines
         context.lineTo(v.left.x, v.left.y)
         context.lineTo(v.bottom.x, v.bottom.y)
         context.lineTo(v.right.x, v.right.y)
-        context.lineTo(v.top.x, v.top.y)
+        context.lineTo(v.top.x, v.top.y)        
+        context.strokeStyle = 'black'
 
-        if( this.highlight ) {
-            context.strokeStyle = '#ffff00'
-        }
         // draw path
         context.stroke()
+    
+
         // fill tile
-        context.fillStyle = color
+        context.fillStyle = (this.highlight) ? '#ffff00' : color
         context.fill() 
     
         // Debug
+        if( this.mapPos.x === 13 && this.mapPos.y === 13 )
+            this._drawTileRect()
+        this._drawMapPos()
 
-        // context.beginPath()
-        // context.rect( x0, y, width, height)
-        // context.stroke()
+        context.restore()
+    }
+
+    private _drawMapPos() {
+
+        const { context } = this.map
+        const { x, y } = this.screenPos // topRight
 
         context.fillStyle = 'black'
         context.fillText( `${this.mapPos.x},${this.mapPos.y}`, x - 40, y + 20 )
+
+    }
+    private _drawTileRect( ) {
+
+        // Debug
+        const { context, tile: { width, height } } = this.map
+        const { topLeft: { x, y } } = this.map.getTileRect(this.screenPos)
+        context.beginPath()
+        context.rect( x, y, width, height)
+        context.stroke()
 
     }
 }
