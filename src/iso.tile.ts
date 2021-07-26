@@ -2,24 +2,22 @@ import { Entity, MapPosition, ScreenPosition, TileMap } from './iso'
 
 export class Tile implements Entity { 
 
+    highlight = false
+
     constructor( public screenPos:ScreenPosition, private mapPos:MapPosition, private map:TileMap) {
         console.log( `screen: [${this.screenPos.x},${this.screenPos.y}} - map:[${this.mapPos.x},${this.mapPos.y}]`)
     }
 
     render():void {
-        const  { x, y } = this.screenPos // topRight
-        const  { x: x0, y: y0 } = this.map.getTilePos(this.screenPos) // bottomLeft
-        
-        const { context, tile: {width, height, color } } = this.map
 
-        const cx = x - width / 2
-        const cy = y + height / 2
+        const v = this.map.getTileVertex(this.screenPos)
+
+        const  { x, y } = this.screenPos // topRight
+        
+        const { context, tile: { color } } = this.map
 
         // begin
         context.beginPath()
-
-        // move to start point
-        context.moveTo(cx, y)
 
         /**
          * create four lines
@@ -30,15 +28,20 @@ export class Tile implements Entity {
          *            |  \       |  \/      |  \/
          * --------------------------------------------
          */
-        context.lineTo(x0, cy)
-        context.lineTo(cx, y0)
-        context.lineTo(x, cy)
-        context.lineTo(cx, y)
 
+        // move to start point
+        context.moveTo(v.top.x, v.top.y)
+        // define lines
+        context.lineTo(v.left.x, v.left.y)
+        context.lineTo(v.bottom.x, v.bottom.y)
+        context.lineTo(v.right.x, v.right.y)
+        context.lineTo(v.top.x, v.top.y)
+
+        if( this.highlight ) {
+            context.strokeStyle = '#ffff00'
+        }
         // draw path
         context.stroke()
-
-
         // fill tile
         context.fillStyle = color
         context.fill() 

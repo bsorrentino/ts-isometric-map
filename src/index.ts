@@ -1,6 +1,6 @@
 import { MapParameters, TileMap, ScreenPosition } from './iso'
 import { Prism } from './iso.prism'
-import { Person } from './ios.person'
+import { Person } from './iso.person'
 import { Image as ImageEntity } from './iso.image'
 import { keyboard, mouse, getMousePositionRelativeToTarget } from './iso.input' 
 

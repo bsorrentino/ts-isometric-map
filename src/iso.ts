@@ -1,6 +1,6 @@
 
 import { basename } from './iso.utils'
-import { Tile } from './ios.tile'
+import { Tile } from './iso.tile'
 
 export type Position = {
     x:number
@@ -9,6 +9,13 @@ export type Position = {
 
 export type MapPosition = Position
 export type ScreenPosition = Position
+
+export type TileVertex = {
+    top:Position
+    left:Position
+    right:Position
+    bottom:Position
+}
 
 export type Size = {
     width:number
@@ -116,7 +123,7 @@ export class TileMap implements Entity {
             }
         }
         
-        this.gameLoopItnterval = setInterval( () => this.render(), 500 )
+        this.gameLoopItnterval = setInterval( () => this.render(), 1000/30 )
     }
 
     render():void {
@@ -199,6 +206,18 @@ export class TileMap implements Entity {
             x: ( (map.x-map.y) * this.tile.width / 2 ) + this.mapPos.x,
             y: ( (map.x+map.y) * this.tile.height / 2 ) + this.mapPos.y
         })
+
+    /**
+     * 
+     * @param pos 
+     * @returns 
+     */
+     getTileVertex = (pos:ScreenPosition):TileVertex => ({
+        top: { x: pos.x - this.tile.width / 2, y: pos.y  },
+        left: { x: pos.x - this.tile.width, y: pos.y + this.tile.height / 2 },
+        right: { x: pos.x, y: pos.y + this.tile.height / 2 },
+        bottom: { x: pos.x - this.tile.width / 2, y: pos.y + this.tile.height }
+    })
 
     /**
      * 
