@@ -17,6 +17,13 @@ export type TileVertex = {
     bottom:Position
 }
 
+export type TileRect = {
+    topRight:Position
+    topLeft:Position
+    bottomRight:Position
+    bottomLeft:Position
+}
+
 export type Size = {
     width:number
     height:number
@@ -126,6 +133,9 @@ export class TileMap implements Entity {
         this.gameLoopItnterval = setInterval( () => this.render(), 1000/30 )
     }
 
+    /**
+     * 
+     */
     render():void {
         this.clear()
         this.renderLayers[0].forEach( v =>  v.render() )
@@ -213,9 +223,9 @@ export class TileMap implements Entity {
      * @returns 
      */
      getTileVertex = (pos:ScreenPosition):TileVertex => ({
-        top: { x: pos.x - this.tile.width / 2, y: pos.y  },
-        left: { x: pos.x - this.tile.width, y: pos.y + this.tile.height / 2 },
-        right: { x: pos.x, y: pos.y + this.tile.height / 2 },
+        top:    { x: pos.x - this.tile.width / 2, y: pos.y  },
+        left:   { x: pos.x - this.tile.width, y: pos.y + this.tile.height / 2 },
+        right:  { x: pos.x, y: pos.y + this.tile.height / 2 },
         bottom: { x: pos.x - this.tile.width / 2, y: pos.y + this.tile.height }
     })
 
@@ -224,9 +234,11 @@ export class TileMap implements Entity {
      * @param pos 
      * @returns 
      */
-    getTilePos = (pos:ScreenPosition):ScreenPosition => ({
-            x: pos.x - this.tile.width,
-            y: pos.y + this.tile.height
+    getTileRect = (pos:ScreenPosition):TileRect => ({
+            topRight:       pos,
+            bottomLeft:     { x: pos.x - this.tile.width, y: pos.y + this.tile.height },
+            bottomRight:    { x:pos.x, y: pos.y + this.tile.height },
+            topLeft:        { x: pos.x - this.tile.width, y: pos.y }
         })
 
     /**
@@ -265,11 +277,16 @@ export class TileMap implements Entity {
         })
     }
 
+    /**
+     * 
+     * @param basename 
+     * @param screenPos 
+     */
     renderImage( basename:string, screenPos:ScreenPosition ):void {
         const source = this.images.get( basename )
 
         if( source ) {
-            const { x, y } = this.getTilePos(screenPos)
+            const { bottomRight: {x, y} } = this.getTileRect(screenPos)
             this.context.drawImage( source, x, y - source!.naturalHeight )    
         }
     }
