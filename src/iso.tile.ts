@@ -5,7 +5,6 @@ export class Tile implements Entity {
     highlight = false
 
     constructor( public screenPos:ScreenPosition, public mapPos:MapPosition, private map:TileMap) {
-        console.log( `screen: [${this.screenPos.x},${this.screenPos.y}} - map:[${this.mapPos.x},${this.mapPos.y}]`)
     }
 
     compare( e:Tile ):number {
@@ -15,13 +14,10 @@ export class Tile implements Entity {
     render():void {
 
         const v = this.map.getTileVertex(this.screenPos)
-
-        const  { x, y } = this.screenPos // topRight
         
         const { context, tile: { color } } = this.map
 
         context.save()
-
 
         /**
          * create four lines

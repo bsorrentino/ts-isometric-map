@@ -1,13 +1,12 @@
-import { Entity, ScreenPosition, MapPosition, TileMap } from './iso'
+import { Entity, ScreenPosition, MapPosition, TileMap, BaseEntity } from './iso'
 
-export class Person implements Entity {
+export class Person extends BaseEntity {
 
     move:'down'|'up'|'left'|'right'|'none' = 'none'
     currentImage:string = 'man-se'
-    screenPos:ScreenPosition
 
     constructor( public mapPos:MapPosition, private map:TileMap) {
-        this.screenPos = map.convertIsoToScreen( mapPos )
+        super( map.convertIsoToScreen( mapPos ) )
     }
 
     compare( e:Person ):number {

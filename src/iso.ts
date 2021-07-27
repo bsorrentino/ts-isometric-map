@@ -47,6 +47,28 @@ export interface Entity {
     compare( e:Entity ):number
 }
 
+/**
+ * 
+ */
+export abstract class BaseEntity implements Entity {
+
+    constructor( public screenPos:Position ) {}
+
+    abstract render(): void 
+
+    compare(e: Entity): number {
+        const dy = this.screenPos.y - e.screenPos.y 
+        if( dy === 0 ) {
+            return this.screenPos.x - e.screenPos.x
+        }
+        return dy
+    }
+
+}
+
+/**
+ * 
+ */
 export class TileMap implements Entity {
 
     private _canvas:HTMLCanvasElement

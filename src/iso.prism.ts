@@ -1,9 +1,9 @@
-import { Entity, ScreenPosition, TileMap } from './iso'
+import { BaseEntity, Entity, ScreenPosition, TileMap } from './iso'
 
 /**
  * 
  */
-export class Prism implements Entity {
+export class Prism extends BaseEntity {
 
     /**
      * 
@@ -11,8 +11,8 @@ export class Prism implements Entity {
      * @param y - map y position
      * @param map 
      */
-    constructor( public screenPos:ScreenPosition, private map:TileMap) {
-        console.log( 'prism', screenPos )
+    constructor( screenPos:ScreenPosition, private map:TileMap) {
+        super( screenPos )
     }
 
     compare( e:Prism ):number {
