@@ -27,7 +27,7 @@ export class Prism extends BaseEntity {
     render() {
         const {x,y} = this.screenPos
 
-        const { context, tile: {width, height, color } } = this.map
+        const { context, tile: {width, height } } = this.map
 
         // top
         context.beginPath()

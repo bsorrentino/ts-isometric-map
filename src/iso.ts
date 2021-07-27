@@ -1,8 +1,11 @@
 
 import { basename } from './iso.utils'
 import { Tile } from './iso.tile'
-import { Mouse, mouse } from './iso.input'
 
+
+export enum Direction {
+    NW, NE, SW, SE
+}
 export type Position = {
     x:number
     y:number
@@ -81,7 +84,7 @@ export class TileMap implements Entity {
 
     mapPos:MapPosition
 
-    renderLayers:[ Array<Entity>, Array<Entity> ] = [  [], [] ]
+    renderLayers:[ Array<Entity>, Array<Entity>, Array<Entity> ] = [  [], [], [] ]
 
     gameLoopItnterval?:NodeJS.Timer
 
@@ -166,10 +169,15 @@ export class TileMap implements Entity {
      */
     render():void {
         this.clear()
-        this._sortLayer(0)
-        this.renderLayers[0].forEach( v =>  v.render() )
-        this._sortLayer(1)
-        this.renderLayers[1].forEach( v =>  v.render() )
+
+        this.renderLayers[0]
+            .sort( ($1,$2) => $1.compare($2) )
+            .forEach( v =>  v.render() )
+
+        this.renderLayers[1]
+            .concat( this.renderLayers[2])
+            .sort( ($1,$2) => $1.compare($2) )
+            .forEach( v =>  v.render() )
 
     }
     
@@ -185,14 +193,6 @@ export class TileMap implements Entity {
         this.renderLayers[layer].push( result )
         return result
     }
-
-    /**
-     * 
-     * @param layer 
-     * @returns 
-     */
-    private _sortLayer = ( layer:number ) => 
-        this.renderLayers[layer].sort( ($1,$2) => $1.compare($2) )
 
     /**
      * 
@@ -350,6 +350,38 @@ export class TileMap implements Entity {
             const { bottomLeft: {x, y} } = this.getTileRect(screenPos)
             this.context.drawImage( source, x, y - source!.naturalHeight )    
         }
+    }
+
+    checkCollision( screenPos:ScreenPosition, dir:Direction, layer = 1, filter?:(e:Entity) => boolean):boolean {
+
+        const entities = (filter) ? 
+                        this.renderLayers[layer].filter( filter ) : 
+                        this.renderLayers[layer]
+
+        const vx = this.getTileVertex(screenPos)
+
+        let predicate:((e:Entity) => boolean)|undefined
+
+        switch( dir ) {
+        case Direction.SW:
+            break;
+        case Direction.SE:
+            predicate = ( e ) => {
+                const { right, left, bottom } = this.getTileVertex(e.screenPos)
+                return ( vx.right.y >= right.y && 
+                        vx.right.y <= bottom.y &&
+                        vx.bottom.x >= left.x && 
+                        vx.right.x <= right.x )
+            }
+            break;
+        case Direction.NW:
+            break;
+        case Direction.NE:
+            break;              
+        }
+
+        return ( predicate ) ?
+            entities.find( predicate )!==undefined : false
     }
 
 }

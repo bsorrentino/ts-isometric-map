@@ -1,4 +1,4 @@
-import { MapParameters, TileMap } from './iso'
+import { Direction, MapParameters, TileMap } from './iso'
 import { Tile } from './iso.tile'
 import { Prism } from './iso.prism'
 import { Person } from './iso.person'
@@ -65,33 +65,17 @@ _mouse.move = (event) => {
 
 const person = new Person(  {x:1, y:1}, isoMap )
 
-isoMap.addEntity( person )
+isoMap.addEntity( person, 2 )
 
-left.press = () => {
-    person.move = 'left'
-}
-left.release = () => { 
-    person.move = 'none'
-}
+const release = () => person.move = null
 
-right.press = () => {
-    person.move = 'right'
-}
-right.release = () => { 
-    person.move = 'none'
-}
+left.press = () => person.move = Direction.SW 
+right.press = () => person.move = Direction.NE
+up.press = () => person.move = Direction.NW
+down.press = () => person.move = Direction.SE
 
-up.press = () => {
-    person.move = 'up'
-}
-up.release = () => { 
-    person.move = 'none'
-}
+left.release = release
+right.release = release
+down.release = release
+up.release = release
 
-
-down.press = () => { 
-    person.move = 'down'
-}
-down.release = () => { 
-    person.move = 'none'
-}

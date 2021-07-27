@@ -1,9 +1,11 @@
-import { Entity, ScreenPosition, MapPosition, TileMap, BaseEntity } from './iso'
+import { Entity, ScreenPosition, MapPosition, TileMap, BaseEntity, Direction } from './iso'
+
+type ImageSet = 'man-se'|'man-sw'|'man-ne'|'man-nw'
 
 export class Person extends BaseEntity {
 
-    move:'down'|'up'|'left'|'right'|'none' = 'none'
-    currentImage:string = 'man-se'
+    move:Direction|null = null
+    currentImage:ImageSet = 'man-se'
 
     constructor( public mapPos:MapPosition, private map:TileMap) {
         super( map.convertIsoToScreen( mapPos ) )
@@ -18,36 +20,37 @@ export class Person extends BaseEntity {
         return dy
     }
 
+    private _moveTo( dir:Direction, _mapPos:MapPosition, image:ImageSet) {
+        if( this.map.isOnMap( _mapPos ) ){
+            this.currentImage = image
+
+            const _screenPos = this.map.convertIsoToScreen( _mapPos )
+
+            if( !this.map.checkCollision( _screenPos, Direction.SE ) ) {
+                this.mapPos     = _mapPos
+                this.screenPos  = _screenPos
+            }
+        }
+
+    }
+
     render():void {
 
         switch( this.move ) {
-            case 'down':
-                
-                if( this.map.isOnMap( { x:this.mapPos.x+1,y:this.mapPos.y } ) ){
-                    this.mapPos.x +=1 
-                    this.currentImage = 'man-se'
-                }
+            case Direction.SE:
+                this._moveTo( Direction.SE, { x:this.mapPos.x + 1, y:this.mapPos.y }, 'man-se')
                 break
-            case 'left':
-                if( this.map.isOnMap( { x:this.mapPos.x,y:this.mapPos.y+1} ) ){
-                    this.mapPos.y +=1 
-                    this.currentImage = 'man-sw'
-                }
+            case Direction.SW:
+                this._moveTo( Direction.SW, { x:this.mapPos.x,y:this.mapPos.y+1}, 'man-sw')
                 break
-            case 'right':
-                if( this.map.isOnMap( { x:this.mapPos.x,y:this.mapPos.y-1 } ) ){
-                    this.mapPos.y -=1 
-                    this.currentImage = 'man-ne'
-                }
+            case Direction.NE:
+                this._moveTo( Direction.NE, { x:this.mapPos.x,y:this.mapPos.y-1 }, 'man-ne')
                 break
-            case 'up':
-                if( this.map.isOnMap( { x:this.mapPos.x-1,y:this.mapPos.y } ) ){                
-                    this.mapPos.x -=1 
-                    this.currentImage = 'man-nw'
-                    }
+            case Direction.NW:
+                this._moveTo( Direction.NW, { x:this.mapPos.x-1,y:this.mapPos.y }, 'man-nw')
                 break
+
         }
-        this.screenPos = this.map.convertIsoToScreen(this.mapPos)
         this.map.renderImage(this.currentImage, this.screenPos )
         
     }
