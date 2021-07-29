@@ -358,26 +358,34 @@ export class TileMap implements Entity {
                         this.renderLayers[layer].filter( filter ) : 
                         this.renderLayers[layer]
 
-        const vx = this.getTileVertex(screenPos)
+        const vt = this.getTileVertex(screenPos)
 
         let predicate:((e:Entity) => boolean)|undefined
 
+        // console.log( 'collision', dir )
         switch( dir ) {
         case Direction.SW:
-            break;
         case Direction.SE:
             predicate = ( e ) => {
-                const { right, left, bottom } = this.getTileVertex(e.screenPos)
-                return ( vx.right.y >= right.y && 
-                        vx.right.y <= bottom.y &&
-                        vx.bottom.x >= left.x && 
-                        vx.right.x <= right.x )
+                const { top, left } = this.getTileVertex(e.screenPos)
+                const { x,y } = vt.left
+
+                // console.log( vt.left, 'top', top, 'left', left )
+                return ( x < top.x && x >= left.x ) &&
+                       ( y > top.y && y <= left.y)
             }
-            break;
+            break
         case Direction.NW:
-            break;
         case Direction.NE:
-            break;              
+            predicate = ( e ) => {
+                const { bottom, right } = this.getTileVertex(e.screenPos)
+                const { x,y } = vt.right
+
+                // console.log( vt.right, 'bottom', bottom, 'right', right )
+                return ( x > bottom.x && x <= right.x ) &&
+                       ( y < bottom.y && y >= right.y)
+            }
+            break
         }
 
         return ( predicate ) ?
