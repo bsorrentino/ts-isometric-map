@@ -11,6 +11,8 @@ Inspired by project [isometric-map](https://github.com/rtatol/isometric-map) fro
 
 [Demo](http://bsorrentino.github.io/ts-isometric-map/demo)
 
+[Typedoc](http://bsorrentino.github.io/ts-isometric-map/typedoc)
+
 ## References
 
 * [Creating Isometric Worlds: A Primer for Game Developers](https://gamedevelopment.tutsplus.com/tutorials/creating-isometric-worlds-a-primer-for-game-developers--gamedev-6511)

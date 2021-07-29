@@ -1,12 +1,16 @@
 
-import { Entity, ScreenPosition, TileMap } from './iso'
+import { BaseEntity, Entity, ScreenPosition, TileMap } from './iso'
 
-export class Image implements Entity {
+export class Image extends BaseEntity {
     source?:HTMLImageElement
 
-    constructor(  private basename:string, public screenPos:ScreenPosition, private map:TileMap) {}
+    constructor(  private basename:string, screenPos:ScreenPosition, private map:TileMap) {
+        super(screenPos)
+    }
 
     render():void {
         this.map.renderImage( this.basename, this.screenPos )
     }
+
+
 }

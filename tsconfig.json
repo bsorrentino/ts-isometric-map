@@ -68,5 +68,12 @@
     /* Advanced Options */
     "skipLibCheck": true,                           /* Skip type checking of declaration files. */
     "forceConsistentCasingInFileNames": true        /* Disallow inconsistently-cased references to the same file. */
+  },
+  "typedocOptions": {
+    "entryPoints": [
+      "src"
+    ],
+    "out": "docs/typedoc",
+    "excludePrivate": true
   }
 }
