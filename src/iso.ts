@@ -337,6 +337,39 @@ export class TileMap implements Entity {
 
         })
     }
+    
+    renderImageScaled(basename:string, screenPos:ScreenPosition, toSize:Size) {
+        const img = this.images.get( basename )
+
+        if( img ) {
+            const hRatio = toSize.width  / img.width    ;
+            const vRatio =  toSize.height / img.height  ;
+            const ratio  = Math.min ( hRatio, vRatio );
+
+            const { bottomLeft: {x, y} } = this.getTileRect(screenPos)
+            this.context.drawImage( 
+                img, 
+                0, 0,  
+                img.width, img.height,
+                x, y - toSize.height,
+                img.width*ratio, img.height*ratio
+                )    
+
+        }
+
+        //
+        // @ref https://stackoverflow.com/a/23105310
+        //
+        // var canvas = ctx.canvas ;
+        // var hRatio = canvas.width  / img.width    ;
+        // var vRatio =  canvas.height / img.height  ;
+        // var ratio  = Math.min ( hRatio, vRatio );
+        // var centerShift_x = ( canvas.width - img.width*ratio ) / 2;
+        // var centerShift_y = ( canvas.height - img.height*ratio ) / 2;  
+        // ctx.clearRect(0,0,canvas.width, canvas.height);
+        // ctx.drawImage(img, 0,0, img.width, img.height,
+        //                    centerShift_x,centerShift_y,img.width*ratio, img.height*ratio);  
+     } 
 
     /**
      * 
@@ -352,6 +385,14 @@ export class TileMap implements Entity {
         }
     }
 
+    /**
+     * 
+     * @param screenPos 
+     * @param dir 
+     * @param layer 
+     * @param filter 
+     * @returns 
+     */
     checkCollision( screenPos:ScreenPosition, dir:Direction, layer = 1, filter?:(e:Entity) => boolean):boolean {
 
         const entities = (filter) ? 

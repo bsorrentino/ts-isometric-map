@@ -12,12 +12,35 @@ export class Tile implements Entity {
     }
 
     render():void {
+        const { context } = this.map
+
+        context.save()
+
+        if( this.highlight ) {
+            this._renderLines()
+        }
+        else  {
+            this._renderImage()
+        }
+
+        // Debug
+        if( this.highlight ) {
+            this._drawTileRect()
+            this._drawMapPos()
+        }
+
+        context.restore()
+    }
+
+    private _renderImage():void {
+        this.map.renderImageScaled('cretebrick970', this.screenPos, this.map.tile )
+    }
+
+    private _renderLines():void {
 
         const v = this.map.getTileVertex(this.screenPos)
         
         const { context, tile: { color } } = this.map
-
-        context.save()
 
         /**
          * create four lines
@@ -48,13 +71,6 @@ export class Tile implements Entity {
         context.fillStyle = (this.highlight) ? '#ffff00' : color
         context.fill() 
     
-        // Debug
-        if( this.highlight ) {
-            this._drawTileRect()
-            this._drawMapPos()
-        }
-
-        context.restore()
     }
 
     private _drawMapPos() {
