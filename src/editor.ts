@@ -5,7 +5,7 @@ import { Image as Img } from './iso.image'
 
 // isometric map settings
 const params:MapParameters = {
-    screen: { width: 1024*2, height: 800*2 },
+    screen: { width: 1024, height: 800 },
     mapSize: { width: 14, height: 14 },
     tileSize: { width: 64, height: 32 }
 }
@@ -20,15 +20,17 @@ const isoMap = new TileMap(params);
 isoMap.loadImages( 
     'assets/wall-tall.png',
     'assets/wall-low.png',
+    'assets/wall-low-nw.png',
     'assets/tiles/cretebrick970.png',
     ).then( () => start() )
 
+const IMG =  'wall-low-nw'   
 /**
  * 
  */
 function start() {
     isoMap.addTiles( TILE_LAYER );
-    
+
     isoMap.start()
 
     let img:Img|undefined
@@ -44,7 +46,7 @@ function start() {
 
             pos = isoMap.convertScreenToIso(pos) // adjust position on map
             
-            img = new Img( 'wall-low', isoMap.convertIsoToScreen( pos ), isoMap)
+            img = new Img( IMG, isoMap.convertIsoToScreen( pos ), isoMap)
 
             isoMap.addEntity( img, 0 )
         }
