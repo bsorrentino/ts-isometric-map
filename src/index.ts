@@ -13,9 +13,13 @@ const params:MapParameters = {
 
 const outDiv = document.getElementById('debug')
 
+const TILE_LAYER = 0 
+const PRISM_LAYER = 1
+const PERSON_LAYER = 2
+
 // create map
 const isoMap = new TileMap(params);
-isoMap.create();
+isoMap.addTiles( TILE_LAYER );
 isoMap.loadImages( 
     'assets/man-ne.png', 
     'assets/man-nw.png', 
@@ -27,6 +31,7 @@ isoMap.loadImages(
     'assets/tiles/brickpavers2.png',
     'assets/tiles/cretebrick970.png',
     )
+isoMap.start()
 
 let left = keyboard("ArrowLeft"),
       up = keyboard("ArrowUp"),
@@ -43,7 +48,7 @@ _mouse.press =  (event) => {
 
             pos = isoMap.convertScreenToIso(pos) // adjust position on map
                 
-            isoMap.addEntity( new Prism( isoMap.convertIsoToScreen( pos ), isoMap) )
+            isoMap.addEntity( new Prism( isoMap.convertIsoToScreen( pos ), isoMap), PRISM_LAYER )
         }
 }
 
@@ -57,7 +62,7 @@ _mouse.move = (event) => {
         const pos = isoMap.convertScreenToIso(mousepos) // adjust position on map
     
         outDiv!.innerHTML = `[${mousepos.x},${mousepos.y}] - [${pos.x},${pos.y}]`
-        const tile = isoMap.findTileByIsoPos(pos)
+        const tile = isoMap.findTileByIsoPos(pos, TILE_LAYER)
 
         if( tile ) {
             if( lastTile ) {
@@ -75,7 +80,7 @@ _mouse.move = (event) => {
 
 const person = new Person(  {x:1, y:1}, isoMap )
 
-isoMap.addEntity( person, 2 )
+isoMap.addEntity( person, PERSON_LAYER )
 
 const release = () => person.move = null
 

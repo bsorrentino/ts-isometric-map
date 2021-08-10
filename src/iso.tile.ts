@@ -16,12 +16,14 @@ export class Tile implements Entity {
 
         context.save()
 
-        if( this.highlight ) {
-            this._renderLines()
-        }
-        else  {
-            this._renderImage()
-        }
+        this._renderLines()
+
+        // if( this.highlight ) {
+        //     this._renderLines()
+        // }
+        // else  {
+        //     this._renderImage()
+        // }
 
         // Debug
         if( this.highlight ) {
@@ -68,8 +70,8 @@ export class Tile implements Entity {
     
 
         // fill tile
-        context.fillStyle = (this.highlight) ? '#ffff00' : color
-        context.fill() 
+        // context.fillStyle = (this.highlight) ? '#ffff00' : color
+        // context.fill() 
     
     }
 

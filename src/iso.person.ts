@@ -26,7 +26,7 @@ export class Person extends BaseEntity {
 
             const _screenPos = this.map.convertIsoToScreen( _mapPos )
 
-            if( !this.map.checkCollision( _screenPos, dir ) ) {
+            if( !this.map.checkCollision( _screenPos, dir, 1 ) ) {
                 this.mapPos     = _mapPos
                 this.screenPos  = _screenPos
             }

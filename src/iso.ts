@@ -69,6 +69,8 @@ export abstract class BaseEntity implements Entity {
 
 }
 
+export type Layer = 0 | 1 | 2
+
 /**
  * 
  */
@@ -99,17 +101,21 @@ export class TileMap implements Entity {
         const canvas = document.getElementById(params.canvasId ?? 'canvas') as HTMLCanvasElement|null
 
         if( canvas == null ) throw new Error("canvas is null!")
+
+        
         const context = canvas.getContext('2d')
         if( context == null ) throw new Error("2d context from canvas is null!")
         
-        this._canvas = canvas
-        this.context = context
-    
         // canvas area details
-        this.screenSize = { 
+        this.screenSize =  { 
             width: params.screen.width,
             height: params.screen.height
-            };
+        };
+
+        // set canvas size
+        canvas.setAttribute('width', `${this.screenSize.width}`);
+        canvas.setAttribute('height', `${this.screenSize.height}`);
+
 
         // size of isometric map
         this.mapSize = {
@@ -126,6 +132,10 @@ export class TileMap implements Entity {
 
         // initial position of isometric map
         this.mapPos = { x:this.screenSize.width / 2, y: this.tile.height * 2 }
+
+        this._canvas = canvas
+        this.context = context
+    
     }
 
     compare( e:TileMap ):number {
@@ -145,23 +155,25 @@ export class TileMap implements Entity {
      */
     clear = () => this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     
-
     /**
-     * @desc draw isometric map
+     * 
+     * @param layer 
      */
-    create() {
-        // set canvas size
-        this._canvas.setAttribute('width', `${this.screenSize.width}`);
-        this._canvas.setAttribute('height', `${this.screenSize.height}`);
-
+    addTiles( layer:Layer ) {
         // tiles drawing loops
         for (let x = 0; x < this.mapSize.width; x++) {
             for ( let y = 0; y < this.mapSize.height; y++) {
-                this._addTile( {x:x, y:y } )
+                this._addTile( {x:x, y:y }, layer )
             }
         }
-        
-        this.gameLoopItnterval = setInterval( () => this.render(), 1000/30 )
+    }
+
+    /**
+     * 
+     * @param fps 
+     */
+    start( fps = 30 ) {
+        this.gameLoopItnterval = setInterval( () => this.render(), 1000/fps )
     }
 
     /**
@@ -187,7 +199,7 @@ export class TileMap implements Entity {
      * @param int $y - position y on canvas area
      * @param layer 
      */
-    private _addTile = ( map:MapPosition, layer = 0):Tile => {
+    private _addTile = ( map:MapPosition, layer:Layer ):Tile => {
         const screen = this.convertIsoToScreen( map) 
         const result = new Tile( screen, map, this )
         this.renderLayers[layer].push( result )
@@ -200,7 +212,7 @@ export class TileMap implements Entity {
      * @param predicate 
      * @returns 
      */
-    private  _findEntity<T extends Entity>( layer:number, predicate:( entity:Entity, index:number ) => boolean ):T|undefined {
+    private  _findEntity<T extends Entity>( layer:Layer, predicate:( entity:Entity, index:number ) => boolean ):T|undefined {
         return this.renderLayers[layer].find( predicate ) as T
     }
 
@@ -223,8 +235,8 @@ export class TileMap implements Entity {
      * 
      * @param screenPos 
      */
-     findTileByIsoPos( isoPos:MapPosition ) {
-        return this._findEntity<Tile>( 0, ( e, i ) => {
+     findTileByIsoPos( isoPos:MapPosition, layer:Layer ) {
+        return this._findEntity<Tile>( layer, ( e, i ) => {
 
             const { mapPos } = e as Tile
 
@@ -239,7 +251,7 @@ export class TileMap implements Entity {
      * @param y - position y on canvas area
      * @param layer 
      */
-    addEntity = <T extends Entity>( entity:T, layer = 1 ):boolean =>  {
+    addEntity = <T extends Entity>( entity:T, layer:Layer ):boolean =>  {
 
         const map = this.convertScreenToIso(entity.screenPos)
 
@@ -317,25 +329,13 @@ export class TileMap implements Entity {
      * @param path 
      * @returns 
      */
-    loadImages( ...paths: string[] )  {
+    loadImages( ...paths: string[] ):Promise<void>  {
+        return Promise.all(paths.map( path => loadImage(path) )).then((values) => {
+            values
+                .filter( v => v!=null )
+                .forEach( v => this.images.set( v!.name, v!.img) )
 
-        paths.forEach( path => {
-            const name = basename(path)
-            
-            if( name ) {
-                let result = new Image()
-                result.src = path
-                result.onload = ( event:any ) => {
-                    console.log( `image ${name} from path: ${path} loaded`, event )
-                }
-                this.images.set( name, result)
-            }
-            else {
-                console.warn( `image path: ${path} is not valid!` )
-                // throw Error( `image path: ${path} is not valid!`)
-            }
-
-        })
+        });
     }
     
     renderImageScaled(basename:string, screenPos:ScreenPosition, toSize:Size) {
@@ -393,7 +393,7 @@ export class TileMap implements Entity {
      * @param filter 
      * @returns 
      */
-    checkCollision( screenPos:ScreenPosition, dir:Direction, layer = 1, filter?:(e:Entity) => boolean):boolean {
+    checkCollision( screenPos:ScreenPosition, dir:Direction, layer:Layer, filter?:(e:Entity) => boolean):boolean {
 
         const entities = (filter) ? 
                         this.renderLayers[layer].filter( filter ) : 
@@ -435,5 +435,31 @@ export class TileMap implements Entity {
 
 }
 
+function loadImage( path:string ):Promise<{ name:string, img:HTMLImageElement}|null> {
+    const name = basename(path)
+    if( !name ) {
+        console.warn( `image path: ${path} is not valid!` )
+        return Promise.resolve( null )
+    }
+
+    return new Promise( (resolve, _) => {
+        let result = new Image()
+        result.onload = ( event:any ) => {
+            console.log( `image ${name} from path: ${path} loaded`, event )
+            resolve( { name:name, img:result} )
+        }
+        result.onerror = ( err:any ) => {
+            console.warn( `error loading image path: ${path}`, err )
+            resolve(null)
+        }
+        result.onabort = ( err:any ) => {
+            console.warn( `abort loading image path: ${path}`, err )
+            resolve(null)
+        }
+        result.src = path
+    
+    })
+
+}
 
 
