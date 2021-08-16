@@ -435,6 +435,11 @@ export class TileMap implements Entity {
 
 }
 
+/**
+ * 
+ * @param path 
+ * @returns 
+ */
 function loadImage( path:string ):Promise<{ name:string, img:HTMLImageElement}|null> {
     const name = basename(path)
     if( !name ) {
