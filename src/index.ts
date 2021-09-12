@@ -9,7 +9,7 @@ import { Image as Img } from './iso.image'
 const params:MapParameters = {
     screen: { width: 1024*2, height: 800*2 },
     mapSize: { width: 14, height: 14 },
-    tileSize: { width: 64, height: 32 }
+    tileSize: { width: 64, height: 32 } // height = width / 2
 }
 
 const outDiv = document.getElementById('debug')
