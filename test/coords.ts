@@ -25,29 +25,25 @@ namespace article1 {
 //
 namespace article2 {
 
-    export type grid2screen_params = {
+    export type Params = {
         tileSize: Size   // width of each tile in pixel, height of each tile in pixels
         tilePos: Position       // x-coordinate of the tile, in tiles, y-coordinate of the tile, in tiles
         mapSize: Size       // width of the map, in tiles, height of the map, in tiles
     } 
 
-    export function grid2screen_v1( params:grid2screen_params ):ScreenPosition {
+    export function map2screen_v1( params:Params ):ScreenPosition {
         const { tileSize, tilePos, mapSize } = params
         return { 
             x: (tileSize.width * tilePos.x)/2 + (mapSize.height * tileSize.width)/2 - (tilePos.y * tileSize.width)/2, 
             y: ((mapSize.height - tilePos.y - 1) * tileSize.height)/2 + (mapSize.width * tileSize.height)/2 - (tilePos.x * tileSize.height )/2 
         }
     }
-    export function grid2screen( params:Omit<grid2screen_params, 'tileSize'> & { halfTileSize:Size } ):ScreenPosition {
+    export function map2screen( params:Omit<Params, 'tileSize'> & { halfTileSize:Size } ):ScreenPosition {
         const { halfTileSize, tilePos, mapSize } = params
         return { 
             x: halfTileSize.width * (tilePos.x + mapSize.height - tilePos.y), 
             y: halfTileSize.height * ((mapSize.height - tilePos.y - 1) + mapSize.width - tilePos.x) 
         }
-    }
-
-    export function screen2grid( screen:ScreenPosition ):MapPosition {
-        return { x: 0, y: 0 }
     }
 
 }
@@ -56,7 +52,7 @@ namespace article2 {
 // @see http://clintbellanger.net/articles/isometric_math/
 //
 namespace article3 {
-    export type params = {
+    export type Params = {
         tileSize:Size
         halfTileSize: Size      // width of each tile in pixel, height of each tile in pixels
         pos: Position           // x-coordinate of the tile, in tiles, y-coordinate of the tile, in tiles
@@ -64,12 +60,12 @@ namespace article3 {
     } 
 
    /**
-    * convert grid to screen assuming gridpos origin is {x:0, y:0} 
+    * convert grid to screen assuming grid origin is {x:0, y:0} 
     * 
     * @param params 
     * @returns 
     */ 
-   export function grid2screen_V1( params:params ):ScreenPosition {
+   export function map2screen_V1( params:Params ):ScreenPosition {
         const { halfTileSize, pos: tilePos } = params
         return { 
             x: halfTileSize.width * ( tilePos.x - tilePos.y ) , 
@@ -78,11 +74,12 @@ namespace article3 {
     }
 
     /**
-     * convert grid to screen considering dynamic gridpos
+     * convert grid to screen considering dynamic grid origin
+     * 
      * @param params 
      * @returns 
      */
-    export function grid2screen( params:params ):ScreenPosition {
+    export function map2screen( params:Params ):ScreenPosition {
         const { halfTileSize, pos: tilePos, mapPos } = params
         return { 
             x: (halfTileSize.width * ( tilePos.x - tilePos.y )) + mapPos.x, 
@@ -91,12 +88,12 @@ namespace article3 {
     }
 
     /**
-     * implements inversion formula of 'grid2screen'
+     * implements inversion formula of 'map2screen'
      * 
      * @param params 
      * @returns 
      */
-    export function screen2grid_V1( params:params ):MapPosition {
+    export function screen2map_V1( params:Params ):MapPosition {
         const { halfTileSize, pos: screenPos, mapPos } = params
 
         const x = ((screenPos.x - mapPos.x)/(halfTileSize.width))/2
@@ -109,11 +106,11 @@ namespace article3 {
     }
 
     /**
-     * equivalent to screen2grid_V1 but more efficient (less operation)
+     * equivalent to screen2map_V1 but more efficient (less operation)
      * @param params 
      * @returns 
      */
-    export function screen2grid( params:params ):MapPosition {
+    export function screen2map( params:Params ):MapPosition {
         const { tileSize, pos: screenPos, mapPos } = params
 
         const x = ((screenPos.x - mapPos.x)/(tileSize.width)) 
@@ -130,24 +127,29 @@ namespace article3 {
 
 describe( 'grid to screen coordinates transformation', () => {
 
-    const tileSize:Size = { width: 64, height: 32 }
-    const mapSize:Size =  { width: 14, height: 14 }
-    const halfTileSize = halfSize(tileSize)
-    const mapPos:Position = { x: 0, y:0 }
+    const tileSize:Size     = { width: 64, height: 32 }
+    const mapSize:Size      = { width: 14, height: 14 }
+    const mapPos:Position   = { x: 0, y:0 }
+    const halfTileSize      = halfSize(tileSize)
 
     test( 'article 2', () => {
         
-        const params = { tilePos: { x: 1, y: 1}, tileSize: tileSize, mapSize: mapSize, halfTileSize:halfTileSize }
+        const params = { 
+            tilePos: { x: 1, y: 1}, 
+            tileSize: tileSize, 
+            mapSize: mapSize, 
+            halfTileSize:halfTileSize 
+        }
 
-        const pos = article2.grid2screen(params)
+        const pos = article2.map2screen(params)
 
         expect(pos).toEqual( { x:448, y: 400 })
-        expect(article2.grid2screen_v1(params)).toEqual( pos )
+        expect(article2.map2screen_v1(params)).toEqual( pos )
     
         params.tilePos = { x: 0, y: 1 } 
-        console.log( article2.grid2screen(params) ) 
+        console.log( article2.map2screen(params) ) 
         params.tilePos = { x: 1, y: 0 } 
-        console.log( article2.grid2screen(params) ) 
+        console.log( article2.map2screen(params) ) 
     
     })
 
@@ -164,48 +166,34 @@ describe( 'grid to screen coordinates transformation', () => {
         expect( params.halfTileSize.height ).toBe(16)
 
         {
-            const screenPos = article3.grid2screen_V1(params)
+            const screenPos_V1 = article3.map2screen_V1(params)
+            params.mapPos = { x: 0, y: 0 } 
+            const screenPos = article3.map2screen(params)
             expect(screenPos).toEqual( { x:0, y: 32 })
+            expect(screenPos).toEqual(screenPos_V1)
     
         }
-    
-        {
-            const mapPos = { x: 0, y: 0 }
-            params.pos = mapPos
-            const screenPos =  article3.grid2screen(params)
-            expect(screenPos).toEqual(params.mapPos) 
-            params.pos = screenPos
-            expect(article3.screen2grid(params)).toEqual(mapPos) 
-        }
+            
+        params.mapPos = { x: 10, y: 1 } 
 
-        {
-            const mapPos = { x: 0, y: 1 }
-            params.pos = mapPos
-            const screenPos =  article3.grid2screen(params)
-            //expect(screenPos).toEqual(params.mapPos) 
-            console.log( params.pos, screenPos)
-            params.pos = screenPos
-            expect(article3.screen2grid(params)).toEqual(mapPos)     
+        for( let x = 0 ; x < 14 ; ++x) {
+            for( let y = 0 ; y < 14 ; ++y) {     
+                const mapPos = { x: x, y: y }
+                params.pos = mapPos
+                const screenPos =  article3.map2screen(params)
+                // console.log( params.pos, screenPos)
+                params.pos = screenPos
+                expect(article3.screen2map(params)).toEqual(mapPos)     
+                } 
         }
-        
-        {
-            const mapPos = { x: 1, y: 0 }
-            params.pos = mapPos
-            const screenPos =  article3.grid2screen(params)
-            //expect(screenPos).toEqual(params.mapPos) 
-            console.log( params.pos, screenPos)
-            params.pos = screenPos
-            expect(article3.screen2grid(params)).toEqual(mapPos)     
-        }
-
+      
         for( let x = 0 ; x < 10 ; ++x) {
-            for( let y = 0 ; y < 10 ; ++y) {
-                
+            for( let y = 0 ; y < 10 ; ++y) {     
                 params.pos = { x:x, y:y }
-                const gridPos =  article3.screen2grid(params)
-                const gridPos_V1 =  article3.screen2grid_V1(params)
+                const mapPos       = article3.screen2map(params)
+                const mapPos_V1    = article3.screen2map_V1(params)
                 // console.log( 'check', mapPos, gridPos, gridPos_V1 )
-                expect(gridPos).toEqual(gridPos_V1)  
+                expect(mapPos).toEqual(mapPos_V1)  
             } 
         }
       })
