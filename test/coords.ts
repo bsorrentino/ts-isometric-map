@@ -57,12 +57,18 @@ namespace article2 {
 //
 namespace article3 {
     export type params = {
+        tileSize:Size
         halfTileSize: Size      // width of each tile in pixel, height of each tile in pixels
         pos: Position           // x-coordinate of the tile, in tiles, y-coordinate of the tile, in tiles
         mapPos:Position         // position of the Map on the screen
     } 
 
-    
+   /**
+    * convert grid to screen assuming gridpos origin is {x:0, y:0} 
+    * 
+    * @param params 
+    * @returns 
+    */ 
    export function grid2screen_V1( params:params ):ScreenPosition {
         const { halfTileSize, pos: tilePos } = params
         return { 
@@ -70,6 +76,12 @@ namespace article3 {
             y: halfTileSize.height  * ( tilePos.x + tilePos.y )
         }
     }
+
+    /**
+     * convert grid to screen considering dynamic gridpos
+     * @param params 
+     * @returns 
+     */
     export function grid2screen( params:params ):ScreenPosition {
         const { halfTileSize, pos: tilePos, mapPos } = params
         return { 
@@ -78,7 +90,13 @@ namespace article3 {
         }
     }
 
-    export function screen2grid( params:params ):MapPosition {
+    /**
+     * implements inversion formula of 'grid2screen'
+     * 
+     * @param params 
+     * @returns 
+     */
+    export function screen2grid_V1( params:params ):MapPosition {
         const { halfTileSize, pos: screenPos, mapPos } = params
 
         const x = ((screenPos.x - mapPos.x)/(halfTileSize.width))/2
@@ -89,11 +107,25 @@ namespace article3 {
             y: y - x
         }
     }
+
+    /**
+     * equivalent to screen2grid_V1 but more efficient (less operation)
+     * @param params 
+     * @returns 
+     */
+    export function screen2grid( params:params ):MapPosition {
+        const { tileSize, pos: screenPos, mapPos } = params
+
+        const x = ((screenPos.x - mapPos.x)/(tileSize.width)) 
+        const y = ((screenPos.y - mapPos.y)/(tileSize.height)) 
+        
+        return { 
+            x: x + y, 
+            y: y - x
+        }
+    }
   
 }
-
-
-    
 
 
 describe( 'grid to screen coordinates transformation', () => {
@@ -122,9 +154,10 @@ describe( 'grid to screen coordinates transformation', () => {
     test( 'article 3', () => {
         
         const params = { 
+            tileSize:tileSize,
             pos: { x: 1, y: 1}, 
             halfTileSize: halfTileSize, 
-            mapPos:{ x: 100, y: 0 } 
+            mapPos:{ x: 10, y: 1 } 
         }
         
         expect( params.halfTileSize.width ).toBe(32)
@@ -163,6 +196,17 @@ describe( 'grid to screen coordinates transformation', () => {
             console.log( params.pos, screenPos)
             params.pos = screenPos
             expect(article3.screen2grid(params)).toEqual(mapPos)     
+        }
+
+        for( let x = 0 ; x < 10 ; ++x) {
+            for( let y = 0 ; y < 10 ; ++y) {
+                
+                params.pos = { x:x, y:y }
+                const gridPos =  article3.screen2grid(params)
+                const gridPos_V1 =  article3.screen2grid_V1(params)
+                // console.log( 'check', mapPos, gridPos, gridPos_V1 )
+                expect(gridPos).toEqual(gridPos_V1)  
+            } 
         }
       })
 })
