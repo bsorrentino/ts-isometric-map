@@ -81,8 +81,8 @@ export class TileMap implements Entity {
     screenPos:ScreenPosition = {x:0, y:0}
 
     screenSize:Size
-    mapSize:Size
-    tile:Size & { color:string }
+    mapSize:Size 
+    tile:Size & { color:string } & { readonly halfWidth:number; readonly halfHeight:number }
 
     mapPos:MapPosition
 
@@ -120,13 +120,15 @@ export class TileMap implements Entity {
         // size of isometric map
         this.mapSize = {
             width: params.mapSize.width,
-            height: params.mapSize.height
+            height: params.mapSize.height,
         };
 
         // size of single tile
         this.tile = {
             width: params.tileSize.width,
             height: params.tileSize.height,
+            halfWidth: params.tileSize.width / 2,
+            halfHeight: params.tileSize.height / 2,
             color: params.color ?? '#15B89A'
         }
 
@@ -200,7 +202,7 @@ export class TileMap implements Entity {
      * @param layer 
      */
     private _addTile = ( map:MapPosition, layer:Layer ):Tile => {
-        const screen = this.convertIsoToScreen( map) 
+        const screen = this.convertMapToScreen( map) 
         const result = new Tile( screen, map, this )
         this.renderLayers[layer].push( result )
         return result
@@ -223,7 +225,7 @@ export class TileMap implements Entity {
     findTileByScreenPos( screenPos:ScreenPosition ) {
         return this._findEntity<Tile>( 0, ( e, i ) => {
 
-            const isoPos = this.convertScreenToIso(screenPos)
+            const isoPos = this.convertScreenToMap(screenPos)
             const { mapPos } = e as Tile
 
             return mapPos.x === isoPos.x && mapPos.y === isoPos.y 
@@ -253,7 +255,7 @@ export class TileMap implements Entity {
      */
     addEntity = <T extends Entity>( entity:T, layer:Layer ):boolean =>  {
 
-        const map = this.convertScreenToIso(entity.screenPos)
+        const map = this.convertScreenToMap(entity.screenPos)
 
         if( this.isOnMap(map) ) {
             this.renderLayers[layer].push( entity )
@@ -266,29 +268,39 @@ export class TileMap implements Entity {
 
     /**
      * 
-     * @param screen 
+     * @param screenPos 
      * @returns 
      */
-    convertScreenToIso( screen:ScreenPosition ):MapPosition {
+    convertScreenToMap( screenPos:ScreenPosition ):MapPosition {
         
-        const x = (screen.x - this.mapPos.x) / this.tile.width
-        const y = (screen.y - this.mapPos.y) / this.tile.height
-
+        const x = ((screenPos.x - this.mapPos.x)/(this.tile.width))  
+        const y = ((screenPos.y - this.mapPos.y)/(this.tile.height)) 
+        
         return { 
-            x: Math.floor(y + x), 
-            y: Math.floor(y - x)  
+            x: x + y, 
+            y: y - x
         }
+
+        // const x = (screen.x - this.mapPos.x) / this.tile.width
+        // const y = (screen.y - this.mapPos.y) / this.tile.height
+
+        // return { 
+        //     x: Math.floor(y + x), 
+        //     y: Math.floor(y - x)  
+        // }
     }
 
     /**
      * 
-     * @param map 
+     * @param mapPos 
      * @returns 
      */
-    convertIsoToScreen = ( map:MapPosition ):ScreenPosition  => ({
-            x: ( (map.x-map.y) * this.tile.width / 2 ) + this.mapPos.x,
-            y: ( (map.x+map.y) * this.tile.height / 2 ) + this.mapPos.y
-        })
+    convertMapToScreen = ( tilePos:MapPosition ):ScreenPosition  => ({ 
+        x: (this.tile.halfWidth * ( tilePos.x - tilePos.y )) + this.mapPos.x, 
+        y: (this.tile.halfHeight  * ( tilePos.x + tilePos.y )) + this.mapPos.y
+        // x: ( (map.x-map.y) * this.tile.width / 2 ) + this.mapPos.x,
+        // y: ( (map.x+map.y) * this.tile.height / 2 ) + this.mapPos.y
+    })
 
     /**
      * 
