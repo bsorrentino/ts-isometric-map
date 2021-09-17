@@ -8,7 +8,7 @@ export class Person extends BaseEntity {
     currentImage:ImageSet = 'man-se'
 
     constructor( public mapPos:MapPosition, private map:TileMap) {
-        super( map.convertIsoToScreen( mapPos ) )
+        super( map.convertMapToScreen( mapPos ) )
     }
 
     compare( e:Person ):number {
@@ -24,7 +24,7 @@ export class Person extends BaseEntity {
         if( this.map.isOnMap( _mapPos ) ){
             this.currentImage = image
 
-            const _screenPos = this.map.convertIsoToScreen( _mapPos )
+            const _screenPos = this.map.convertMapToScreen( _mapPos )
 
             if( !this.map.checkCollision( _screenPos, dir, 1 ) ) {
                 this.mapPos     = _mapPos

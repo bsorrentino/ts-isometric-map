@@ -44,9 +44,9 @@ function start() {
 
         if( pos != null && !img) {
 
-            pos = isoMap.convertScreenToIso(pos) // adjust position on map
+            pos = isoMap.convertScreenToMap(pos) // adjust position on map
             
-            img = new Img( IMG, isoMap.convertIsoToScreen( pos ), isoMap)
+            img = new Img( IMG, isoMap.convertMapToScreen( pos ), isoMap)
 
             isoMap.addEntity( img, 0 )
         }
@@ -61,7 +61,7 @@ function start() {
 
         if( mousepos != null && img ) {
 
-            const pos = isoMap.convertScreenToIso(mousepos) // adjust position on map
+            const pos = isoMap.convertScreenToMap(mousepos) // adjust position on map
         
             outDiv!.innerHTML = `[${mousepos.x},${mousepos.y}] - [${pos.x},${pos.y}]`
 

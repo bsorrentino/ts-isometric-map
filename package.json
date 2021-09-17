@@ -4,7 +4,7 @@
   "description": "",
   "main": "docs/demo/index.html",
   "scripts": {
-    "start": "parcel serve ./src/index.html --open safari",
+    "start": "parcel serve ./src/index.html",
     "build": "parcel build --public-url /ts-isometric-map/demo ./src/index.html",
     "doc": "typedoc",
     "test": "jest"

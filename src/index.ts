@@ -1,9 +1,16 @@
 import { Direction, MapParameters, TileMap } from './iso'
 import { Tile } from './iso.tile'
-import { Prism } from './iso.prism'
 import { Person } from './iso.person'
 import { keyboard, mouse } from './iso.input' 
 import { Image as Img } from './iso.image'
+
+console.log( 'starting ...')
+
+const outDiv = document.getElementById('debug')
+
+const TILE_LAYER = 0 
+const PRISM_LAYER = 1
+const PERSON_LAYER = 2
 
 // isometric map settings
 const params:MapParameters = {
@@ -11,12 +18,6 @@ const params:MapParameters = {
     mapSize: { width: 14, height: 14 },
     tileSize: { width: 64, height: 32 } // height = width / 2
 }
-
-const outDiv = document.getElementById('debug')
-
-const TILE_LAYER = 0 
-const PRISM_LAYER = 1
-const PERSON_LAYER = 2
 
 // create map
 const isoMap = new TileMap(params);
@@ -34,6 +35,9 @@ isoMap.loadImages(
     ).then( start )
 
 function start() {
+    
+    console.time('start')
+
     isoMap.addTiles( TILE_LAYER );
     isoMap.start()
 
@@ -50,9 +54,9 @@ function start() {
 
             if( pos != null ) {
 
-                pos = isoMap.convertScreenToIso(pos) // adjust position on map
+                pos = isoMap.convertScreenToMap(pos) // adjust position on map
 
-                isoMap.addEntity( new Img( 'wall-low-single', isoMap.convertIsoToScreen( pos ) , isoMap), PRISM_LAYER )
+                isoMap.addEntity( new Img( 'wall-low-single', isoMap.convertMapToScreen( pos ) , isoMap), PRISM_LAYER )
            
                 //isoMap.addEntity( new Prism( isoMap.convertIsoToScreen( pos ), isoMap), PRISM_LAYER )
             }
@@ -65,7 +69,7 @@ function start() {
 
         if( mousepos != null ) {
 
-            const pos = isoMap.convertScreenToIso(mousepos) // adjust position on map
+            const pos = isoMap.convertScreenToMap(mousepos) // adjust position on map
         
             outDiv!.innerHTML = `[${mousepos.x},${mousepos.y}] - [${pos.x},${pos.y}]`
             const tile = isoMap.findTileByIsoPos(pos, TILE_LAYER)
@@ -100,4 +104,5 @@ function start() {
     down.release = release
     up.release = release
 
+    console.timeEnd( 'start' )
 }
