@@ -19,8 +19,7 @@
   },
   "homepage": "https://github.com/bsorrentino/ts-isometric-map#readme",
   "workspaces": [
-    "packages/rust-module",
-    "packages/web-module",
-    "packages/test"
+    "modules/wasm-isomap",
+    "modules/web-module"
   ]
 }
