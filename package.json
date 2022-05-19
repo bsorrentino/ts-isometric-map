@@ -4,8 +4,10 @@
   "description": "Isometric map made with Rust and HTML5 Canvas",
   "main": "index.js",
   "scripts": {
-    "wasm:pack": "wasm-pack -v build --out-dir=../modules/wasm-isomap rust-isomap",
-    "wasm:app": "npm init wasm-app -w packages/web-isomap"
+    "wasm:build": "wasm-pack -v build --out-dir=../modules/wasm-isomap rust-isomap",
+    "wasm:app": "npm init wasm-app -w packages/web-isomap",
+    "build": "npm run wasm:build; npm run build -w=web-isomap",
+    "start": "npm start -w=web-isomap"
   },
   "repository": {
     "type": "git",
