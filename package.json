@@ -20,6 +20,6 @@
   "homepage": "https://github.com/bsorrentino/ts-isometric-map#readme",
   "workspaces": [
     "modules/wasm-isomap",
-    "modules/web-module"
+    "modules/web-isomap"
   ]
 }
