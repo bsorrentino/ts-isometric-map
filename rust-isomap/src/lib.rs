@@ -1,6 +1,9 @@
 mod utils;
 mod iso;
 
+use iso::{ 
+    TileMapBuilder,
+};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{ 
     console, 
@@ -41,6 +44,27 @@ pub fn run() -> Result<(), JsValue> {
     // window object.
     let window = web_sys::window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");
+
+    let tilemap = 
+            TileMapBuilder::default()
+                // .canvas_id("canvas")
+                .build(&document)
+                ;
+
+
+    Ok(())
+}
+
+
+pub fn run_1() -> Result<(), JsValue> {
+
+    utils::set_panic_hook();
+
+    // Use `web_sys`'s global `window` function to get a handle on the global
+    // window object.
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+
     let body = document.body().expect("document should have a body");
 
     let canvas = get_canvas(&document).unwrap_throw();
