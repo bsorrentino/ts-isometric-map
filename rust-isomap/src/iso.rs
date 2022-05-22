@@ -26,7 +26,7 @@ struct Size {
 //     }
 // }
 
-struct TileMap {
+pub struct TileMap {
     map_size: Size,
     screen_pos: Pos,
     screen_size: Size,
@@ -35,7 +35,7 @@ struct TileMap {
 }
 
 #[derive(Default)]
-struct TileMapBuilder {
+pub struct TileMapBuilder {
     screen_size: Size,
     map_size: Size,
     tile_size: Size,
@@ -56,32 +56,32 @@ struct TileMapBuilder {
 
 impl TileMapBuilder {
     
-    fn screen_size( mut self, size: Size ) -> TileMapBuilder {
+    pub fn screen_size( mut self, size: Size ) -> TileMapBuilder {
         self.screen_size = size;
         self
     }
 
-    fn map_size( mut self, size: Size ) -> TileMapBuilder {
+    pub fn map_size( mut self, size: Size ) -> TileMapBuilder {
         self.map_size = size;
         self
     }
 
-    fn tile_size( mut self, size: Size ) -> TileMapBuilder {
+    pub fn tile_size( mut self, size: Size ) -> TileMapBuilder {
         self.tile_size = size;
         self
     }
 
-    fn canvas_id( mut self, id: &str ) -> TileMapBuilder {
+    pub fn canvas_id( mut self, id: &str ) -> TileMapBuilder {
         self.canvas_id = Some(String::from(id));
         self
     }
 
-    fn color( mut self, color: &str ) -> TileMapBuilder {
+    pub fn color( mut self, color: &str ) -> TileMapBuilder {
         self.color = Some(String::from(color));
         self
     }
 
-    fn build( &self, document: &Document ) -> Result<TileMap, String> {
+    pub fn build( &self, document: &Document ) -> Result<TileMap, String> {
 
         let def_canvas_id = String::from("canvas");
         let canvas_id = self.canvas_id.as_ref().unwrap_or( &def_canvas_id);
