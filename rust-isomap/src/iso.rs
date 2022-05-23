@@ -3,19 +3,18 @@ use wasm_bindgen::JsCast;
 use web_sys::{ 
     console, 
     Document, 
-    Element,
     HtmlCanvasElement,
     CanvasRenderingContext2d,
 };
 
 #[derive(Default, Copy, Clone, PartialEq)]
-struct Pos {
+pub struct Pos {
     x: i32,
     y: i32,
 }
 
 #[derive(Default, Copy, Clone, PartialEq)]
-struct Size {
+pub struct Size {
     width: i32,
     height: i32,
 }
@@ -26,10 +25,22 @@ struct Size {
 //     }
 // }
 
+#[derive(Default, Copy, Clone, PartialEq)]
+pub struct TileRect {
+    top_right: Pos,
+    top_left: Pos,
+    bottom_right:Pos,
+    bottom_left:Pos,
+}
+
 pub struct TileMap {
     map_size: Size,
     screen_pos: Pos,
     screen_size: Size,
+    tile_size: Size,
+    tile_color: String, 
+    tile_half_width: i32,
+    tile_half_height:i32,
     canvas: HtmlCanvasElement,
     context: CanvasRenderingContext2d,
 }
@@ -56,39 +67,42 @@ pub struct TileMapBuilder {
 
 impl TileMapBuilder {
     
-    pub fn screen_size( mut self, size: Size ) -> TileMapBuilder {
+
+    pub fn with_screen_size( mut self, size: Size ) -> TileMapBuilder {
         self.screen_size = size;
         self
     }
 
-    pub fn map_size( mut self, size: Size ) -> TileMapBuilder {
+    pub fn with_map_size( mut self, size: Size ) -> TileMapBuilder {
         self.map_size = size;
         self
     }
 
-    pub fn tile_size( mut self, size: Size ) -> TileMapBuilder {
+    pub fn with_tile_size( mut self, size: Size ) -> TileMapBuilder {
         self.tile_size = size;
         self
     }
 
-    pub fn canvas_id( mut self, id: &str ) -> TileMapBuilder {
+    pub fn with_canvas_id( mut self, id: &str ) -> TileMapBuilder {
         self.canvas_id = Some(String::from(id));
         self
     }
 
-    pub fn color( mut self, color: &str ) -> TileMapBuilder {
+    pub fn with_color( mut self, color: &str ) -> TileMapBuilder {
         self.color = Some(String::from(color));
         self
     }
 
     pub fn build( &self, document: &Document ) -> Result<TileMap, String> {
 
-        let def_canvas_id = String::from("canvas");
-        let canvas_id = self.canvas_id.as_ref().unwrap_or( &def_canvas_id);
+        let canvas_id = match &self.canvas_id {
+            Some(id) => String::from(id),
+            None => String::from("canvas")
+        };
 
         let canvas = {
             let expect_msg_1 = format!("canvas id '{}' not found", canvas_id );
-            let elem = document.get_element_by_id(canvas_id).expect( &expect_msg_1 );
+            let elem = document.get_element_by_id(&canvas_id).expect( &expect_msg_1 );
             let expect_msg_2 = format!("element id '{}' is a not valid Canvas object!", canvas_id );
             elem.dyn_into::<HtmlCanvasElement>().expect( &expect_msg_2 )
         };
@@ -108,6 +122,13 @@ impl TileMapBuilder {
             map_size: self.map_size, 
             screen_pos: Pos::default(), 
             screen_size: self.screen_size,
+            tile_size: self.tile_size,
+            tile_half_height: self.tile_size.height / 2,
+            tile_half_width: self.tile_size.height / 2,
+            tile_color: match &self.color {
+                Some(v) => String::from(v),
+                None => String::from("#15B89A"),
+            },
             canvas, 
             context,
         })
@@ -139,16 +160,34 @@ trait Entity<Rhs: ?Sized = Self> : PartialEq<Rhs> where Rhs: Entity  {
 }
 
 impl TileMap {
+
+    /**
+     * @return Builder
+     */
+    pub fn builder() -> TileMapBuilder {
+        TileMapBuilder::default()
+    }
+
+    /// Get Tile Rect relative to screen pos
+    pub fn get_tile_rect( &self, screen_pos: &Pos ) -> TileRect {
+        TileRect {
+            top_right:       *screen_pos,
+            bottom_left:     Pos { x: screen_pos.x - self.tile_size.width, y: screen_pos.y + self.tile_size.height },
+            bottom_right:    Pos { x: screen_pos.x, y: screen_pos.y + self.tile_size.height },
+            top_left:        Pos { x: screen_pos.x - self.tile_size.width, y: screen_pos.y },
+        }
+    }
+
     /**
      * 
      * @param basename 
      * @param screenPos 
      */
-    fn renderImage( basename: &str, screen_pos: &Pos ) -> () {
+    fn render_image( &self, basename: &str, screen_pos: &Pos ) -> () {
         // const source = this.images.get( basename )
 
         // if( source ) {
-        //     const { bottomLeft: {x, y} } = this.getTileRect(screenPos)
+        //     const { bottomLeft: {x, y} } = this.get_tile_rect(screenPos)
         //     this.context.drawImage( source, x, y - source!.naturalHeight )    
         // }
     }

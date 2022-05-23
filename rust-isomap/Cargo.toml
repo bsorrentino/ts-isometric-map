@@ -15,18 +15,21 @@ default = [
 [dependencies]
 js-sys = "0.3.57"
 wasm-bindgen = "0.2.80"
+wasm-bindgen-futures = "0.4.30"
 console_error_panic_hook = { version = "0.1.7", optional = true }
 
 
 [dependencies.web-sys]
 version = "0.3.4"
 features = [
-  'CanvasRenderingContext2d',
+  'console',
+  'Window',
   'Document',
   'Element',
   'HtmlCanvasElement',
-  'Window',
-  'console',
+  'CanvasRenderingContext2d',
+  'HtmlImageElement',
+
 ]
 
 # The `console_error_panic_hook` crate provides better debugging of panics by

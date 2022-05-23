@@ -1,8 +1,10 @@
 mod utils;
 mod iso;
+mod image_future;
 
+use image_future::ImageFuture;
 use iso::{ 
-    TileMapBuilder,
+    TileMap,
 };
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{ 
@@ -36,7 +38,7 @@ pub fn greet() {
 
 // Called by our JS entry point to run the example
 #[wasm_bindgen(start)]
-pub fn run() -> Result<(), JsValue> {
+pub async fn run() -> Result<(), JsValue> {
 
     utils::set_panic_hook();
 
@@ -46,11 +48,14 @@ pub fn run() -> Result<(), JsValue> {
     let document = window.document().expect("should have a document on window");
 
     let tilemap = 
-            TileMapBuilder::default()
+            TileMap::builder()
                 // .canvas_id("canvas")
                 .build(&document)
                 ;
 
+    let img_future = ImageFuture::new("assets/man-ne.png");
+
+    let img = img_future.await.unwrap();
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 mod iso;
 
-struct Image {
+pub struct Image {
     screen_pos: Pos,
     basename: &str,
     map: &TileMap,
@@ -13,7 +13,7 @@ impl Entity for Image {
     }
     
     fn render(&self) {
-        self.map.renderImage( self.basename, self.screen_pos )
+        self.map.render_image( self.basename, self.screen_pos )
     }
 
 }
