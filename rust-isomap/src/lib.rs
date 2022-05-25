@@ -2,7 +2,8 @@ mod utils;
 mod iso;
 mod image_future;
 
-use image_future::ImageFuture;
+use std::{mem::MaybeUninit, sync::Mutex};
+
 use iso::{ 
     TileMap,
 };
@@ -36,27 +37,49 @@ pub fn greet() {
 
 }
 
+///  Singleton pattern
+///
+///  [https://github.com/lpxxn/rust-design-pattern/blob/master/creational/singleton.rs]
+///
+fn tilemap() -> &'static Mutex<TileMap> {
+    static mut SINGLETON: MaybeUninit<Mutex<TileMap>> = MaybeUninit::uninit();
+    static ONCE: std::sync::Once = std::sync::Once::new();
+
+
+    ONCE.call_once( || unsafe {
+
+        let window = web_sys::window().expect("no global `window` exists");
+        let document = window.document().expect("should have a document on window");
+    
+        let tilemap = 
+                TileMap::builder()
+                    // .canvas_id("canvas")
+                    .build(&document).expect("impossible create tilemap");
+                    
+        SINGLETON.as_mut_ptr().write( Mutex::new(tilemap) );
+    });
+
+    unsafe {
+         &*SINGLETON.as_ptr()
+    }
+
+}
+
 // Called by our JS entry point to run the example
 #[wasm_bindgen(start)]
+//#[warn(unused_must_use)]
 pub async fn run() -> Result<(), JsValue> {
 
     utils::set_panic_hook();
+    
+    {
+        let mut tilemap  = tilemap().lock().unwrap();
 
-    // Use `web_sys`'s global `window` function to get a handle on the global
-    // window object.
-    let window = web_sys::window().expect("no global `window` exists");
-    let document = window.document().expect("should have a document on window");
-
-    let tilemap = 
-            TileMap::builder()
-                // .canvas_id("canvas")
-                .build(&document)
-                ;
-
-    let img_future = ImageFuture::new("assets/man-ne.png");
-
-    let img = img_future.await.unwrap();
-
+        tilemap.load_images( &["assets/man-ne.png", "assets/man-nw.png"] ).await.expect("error loading images");
+    
+    }
+    
+ 
     Ok(())
 }
 
