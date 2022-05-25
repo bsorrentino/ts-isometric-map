@@ -65,7 +65,7 @@ impl Future for ImageFuture {
                     waker.wake_by_ref();
                 }) as Box<dyn FnMut()>);
                 image.set_onload(Some(on_load_closure.as_ref().unchecked_ref()));
-                on_load_closure.forget();
+                on_load_closure.forget(); // possibly leak (see `--weak-ref` bindgen option )
 
                 // image.onerror closure
                 let waker = cx.waker().clone();
@@ -80,16 +80,16 @@ impl Future for ImageFuture {
                 on_error_closure.forget();
 
                 // image.onabort closure
-                let waker = cx.waker().clone();
-                let failed_flag = self.load_failed.clone();
-                let image_path = self.get_image_path().unwrap();
-                let on_abort_closure = Closure::wrap(Box::new(move |err: &JsValue| {
-                    console::warn_3( &"abort loading image at path:".into(), &*image_path, err);
-                    failed_flag.set(true);
-                    waker.wake_by_ref();
-                }) as Box<dyn FnMut(&JsValue)>);
-                image.set_onabort(Some(on_abort_closure.as_ref().unchecked_ref()));
-                on_abort_closure.forget();
+                // let waker = cx.waker().clone();
+                // let failed_flag = self.load_failed.clone();
+                // let image_path = self.get_image_path().unwrap();
+                // let on_abort_closure = Closure::wrap(Box::new(move |err: &JsValue| {
+                //     console::warn_3( &"abort loading image at path:".into(), &*image_path, err);
+                //     failed_flag.set(true);
+                //     waker.wake_by_ref();
+                // }) as Box<dyn FnMut(&JsValue)>);
+                // image.set_onabort(Some(on_abort_closure.as_ref().unchecked_ref()));
+                // on_abort_closure.forget();
                 
                 Poll::Pending
             },

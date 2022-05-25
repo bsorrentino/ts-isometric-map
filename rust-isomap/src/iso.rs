@@ -1,11 +1,15 @@
 
+use std::{iter, future, collections::HashMap};
+
 use wasm_bindgen::JsCast;
 use web_sys::{ 
     console, 
     Document, 
     HtmlCanvasElement,
-    CanvasRenderingContext2d,
+    CanvasRenderingContext2d, HtmlImageElement,
 };
+
+use crate::image_future::ImageFuture;
 
 #[derive(Default, Copy, Clone, PartialEq)]
 pub struct Pos {
@@ -43,6 +47,7 @@ pub struct TileMap {
     tile_half_height:i32,
     canvas: HtmlCanvasElement,
     context: CanvasRenderingContext2d,
+    images: HashMap<String,HtmlImageElement>,
 }
 
 #[derive(Default)]
@@ -131,6 +136,7 @@ impl TileMapBuilder {
             },
             canvas, 
             context,
+            images: HashMap::new(),
         })
     }
 
@@ -178,12 +184,36 @@ impl TileMap {
         }
     }
 
+    pub async fn load_images( &mut self, images: &[&str] ) -> Result<(), ()> {
+        
+        let img_future_arr = 
+                    images.iter()
+                        .map( |path| (*path, ImageFuture::new(*path)) );
+                        
+
+        for (path, future) in img_future_arr {
+
+            match future.await {
+                Ok(img) => self.images.insert( String::from(path), img ),
+                Err(_err) => None
+            };
+            
+
+        }
+
+        Ok(())
+        
+    
+    }
+
     /**
      * 
      * @param basename 
      * @param screenPos 
      */
     fn render_image( &self, basename: &str, screen_pos: &Pos ) -> () {
+
+        let source = self.images.get( basename );
         // const source = this.images.get( basename )
 
         // if( source ) {
