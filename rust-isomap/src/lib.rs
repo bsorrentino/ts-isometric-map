@@ -4,9 +4,8 @@ mod image_future;
 
 use std::{mem::MaybeUninit, sync::Mutex};
 
-use iso::{ 
-    TileMap,
-};
+use iso::{TileMap, Entity};
+
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::{ 
     console, 
@@ -24,17 +23,6 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 #[wasm_bindgen(js_namespace = window)]
 extern {
     fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    let msg = "WASM ISOMAP";
-
-    alert( msg );
-
-    console::log_1( &msg.into() )
-
-
 }
 
 ///  Singleton pattern
@@ -65,25 +53,36 @@ fn tilemap() -> &'static Mutex<TileMap> {
 
 }
 
-// Called by our JS entry point to run the example
-#[wasm_bindgen(start)]
-//#[warn(unused_must_use)]
-pub async fn run() -> Result<(), JsValue> {
 
+// Called by our JS entry point to run the example
+#[wasm_bindgen]
+// #[wasm_bindgen(start)]
+pub async fn init() -> Result<(), JsValue> {
+    console::log_1( &"init".into() );
+ 
     utils::set_panic_hook();
     
     {
         let mut tilemap  = tilemap().lock().unwrap();
 
         tilemap.load_images( &["assets/man-ne.png", "assets/man-nw.png"] ).await.expect("error loading images");
-    
     }
     
- 
     Ok(())
 }
 
 
+#[wasm_bindgen]
+pub fn render() {
+    let tilemap  = tilemap().lock().unwrap();
+
+    match tilemap.render() {
+        Ok(()) => (),
+        Err(_err) => () 
+    }
+}
+
+/* 
 pub fn run_1() -> Result<(), JsValue> {
 
     utils::set_panic_hook();
@@ -120,3 +119,4 @@ fn get_canvas( document: &Document ) -> Result<HtmlCanvasElement, ()> {
     elem.dyn_into::<HtmlCanvasElement>().map_err(|_| ())
 
 }
+*/
