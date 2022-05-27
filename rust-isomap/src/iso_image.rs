@@ -12,7 +12,7 @@ impl Entity for Image {
         &self.screen_pos
     }
     
-    fn render(&self) {
+    fn render(&self) -> Result<(), iso::Error> {
         self.map.render_image( self.basename, self.screen_pos )
     }
 
