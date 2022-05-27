@@ -1,3 +1,13 @@
 import * as wasm from "wasm-isomap";
 
-wasm.greet()
+wasm.init().then( () => {
+
+    const render = () => {
+        wasm.render();
+        requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame( render )
+    
+});
+
