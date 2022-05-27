@@ -1,16 +1,23 @@
 
 use std::{iter, future, collections::HashMap};
 
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsValue, prelude::Closure};
 use web_sys::{ 
     console, 
     Document, 
     HtmlCanvasElement,
-    CanvasRenderingContext2d, HtmlImageElement,
+    CanvasRenderingContext2d, HtmlImageElement
 };
 
 use crate::image_future::ImageFuture;
 
+    
+#[derive()]
+pub enum Error {
+    ImageNotFound( String ),
+    RenderImage( JsValue ),
+}
+    
 #[derive(Default, Copy, Clone, PartialEq)]
 pub struct Pos {
     x: i32,
@@ -48,6 +55,7 @@ pub struct TileMap {
     canvas: HtmlCanvasElement,
     context: CanvasRenderingContext2d,
     images: HashMap<String,HtmlImageElement>,
+    
 }
 
 #[derive(Default)]
@@ -123,7 +131,7 @@ impl TileMapBuilder {
                 .expect( &expect_msg_3 )
         };
         
-        Ok(TileMap { 
+        let mut tilemap = TileMap { 
             map_size: self.map_size, 
             screen_pos: Pos::default(), 
             screen_size: self.screen_size,
@@ -137,7 +145,10 @@ impl TileMapBuilder {
             canvas, 
             context,
             images: HashMap::new(),
-        })
+
+        };
+
+        Ok(tilemap)
     }
 
 } 
@@ -150,10 +161,10 @@ impl TileMapBuilder {
 // }
 
 
-trait Entity<Rhs: ?Sized = Self> : PartialEq<Rhs> where Rhs: Entity  {
+pub trait Entity<Rhs: ?Sized = Self> : PartialEq<Rhs> where Rhs: Entity  {
     fn screen_pos(&self) -> &Pos;
 
-    fn render(&self);
+    fn render(&self) -> Result<(), Error>;
 
     fn compare( &self, other: &Self ) -> i32 {
         let my_pos =  self.screen_pos();
@@ -203,7 +214,6 @@ impl TileMap {
 
         Ok(())
         
-    
     }
 
     /**
@@ -211,16 +221,44 @@ impl TileMap {
      * @param basename 
      * @param screenPos 
      */
-    fn render_image( &self, basename: &str, screen_pos: &Pos ) -> () {
+    pub fn render_image( &self, basename: &str, screen_pos: &Pos ) -> Result<(), Error> {
 
-        let source = self.images.get( basename );
-        // const source = this.images.get( basename )
+        let source = match self.images.get( basename ) {
+            Some(it) => it,
+            _ => return Err( Error::ImageNotFound( String::from(basename)))
+        };
 
-        // if( source ) {
-        //     const { bottomLeft: {x, y} } = this.get_tile_rect(screenPos)
-        //     this.context.drawImage( source, x, y - source!.naturalHeight )    
-        // }
+        let TileRect {  
+            bottom_left : Pos { x: dx, y }, 
+            top_right: _, 
+            top_left: _,
+            bottom_right: _}  = self.get_tile_rect(screen_pos);
+
+        let dy  = y - source.natural_height() as i32;
+
+        match self.context.draw_image_with_html_image_element(source, dx as f64, dy as f64) {
+            Ok(()) => Ok(()),
+            Err(js_err) => Err(Error::RenderImage(js_err))
+
+        }
+
     }
+
+    // pub fn start( &mut self, fps: u16 ) -> Result<(), JsValue>{
+
+    //     let window = web_sys::window().unwrap();
+        
+
+    //     match window.set_interval_with_callback_and_timeout_and_arguments_0(
+    //             self._render_closure.as_ref().unwrap().as_ref().unchecked_ref(), 
+    //             (1000/fps) as i32) {
+    //         Ok(token) => { 
+    //             self._game_loop_interval = token;
+    //             Ok(())
+    //         },
+    //         Err(js_err) => Err(js_err)     
+    //     }
+    // }
 
 }   
 
@@ -236,11 +274,11 @@ impl Entity for TileMap {
         &self.screen_pos
     }
     
-    fn render(&self) {
-        
+    fn render(&self) -> Result<(), Error> {
+        console::log_1( &"render".into() );
+        Ok(())
     }
 }
-
 
 
 
