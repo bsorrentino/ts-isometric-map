@@ -9,5 +9,7 @@ wasm.init().then( () => {
 
     requestAnimationFrame( render )
     
+
+    // setInterval( () => wasm.render(), 1000 );
 });
 

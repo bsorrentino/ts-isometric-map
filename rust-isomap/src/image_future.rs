@@ -60,7 +60,7 @@ impl Future for ImageFuture {
                 // image.onload closure
                 let waker = cx.waker().clone();
                 let image_path = self.get_image_path().unwrap();
-                let on_load_closure = Closure::wrap(Box::new(move || {
+                let on_load_closure = Closure::once(Box::new(move || {
                     console::log_2( &"image loaded at path:".into(), &*image_path);
                     waker.wake_by_ref();
                 }) as Box<dyn FnMut()>);

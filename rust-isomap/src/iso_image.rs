@@ -3,7 +3,7 @@ mod iso;
 pub struct Image {
     screen_pos: Pos,
     basename: &str,
-    map: &TileMap,
+    map: Rc<TileMap>,
 }
 
 impl Entity for Image {

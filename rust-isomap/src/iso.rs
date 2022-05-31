@@ -1,7 +1,6 @@
 
-use std::{iter, future, collections::HashMap};
-
-use wasm_bindgen::{JsCast, JsValue, prelude::Closure};
+use std::{ collections::HashMap, cmp::Ordering};
+use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{ 
     console, 
     Document, 
@@ -9,9 +8,17 @@ use web_sys::{
     CanvasRenderingContext2d, HtmlImageElement
 };
 
-use crate::image_future::ImageFuture;
+use crate::{image_future::ImageFuture, iso_tile::Tile};
 
-    
+type Measure = f64;
+
+#[repr(u8)]
+#[derive(Copy, Clone, PartialEq)]
+pub enum Layer {
+    PrismLayer = 0,
+    PersonLayer = 1,
+}
+
 #[derive()]
 pub enum Error {
     ImageNotFound( String ),
@@ -20,14 +27,14 @@ pub enum Error {
     
 #[derive(Default, Copy, Clone, PartialEq)]
 pub struct Pos {
-    x: i32,
-    y: i32,
+    pub x: Measure,
+    pub y: Measure,
 }
 
 #[derive(Default, Copy, Clone, PartialEq)]
 pub struct Size {
-    width: i32,
-    height: i32,
+    pub width: u32,
+    pub height: u32,
 }
 
 // impl Default for Size {
@@ -38,24 +45,65 @@ pub struct Size {
 
 #[derive(Default, Copy, Clone, PartialEq)]
 pub struct TileRect {
-    top_right: Pos,
-    top_left: Pos,
-    bottom_right:Pos,
-    bottom_left:Pos,
+    pub top_right: Pos,
+    pub top_left: Pos,
+    pub bottom_right:Pos,
+    pub bottom_left:Pos,
 }
 
+#[derive(Default, Copy, Clone, PartialEq)]
+pub struct TileVertex {
+    pub top:Pos,
+    pub left:Pos,
+    pub right:Pos,
+    pub bottom:Pos,
+}
+
+pub trait Entity {
+    fn screen_pos(&self) -> &Pos;
+
+    fn render(&self, owner_ref: &TileMap) -> Result<(), Error>;
+
+}
+
+pub trait Comparable {
+
+    fn compare(&self, other: &Self) -> Ordering;
+
+}
+
+impl Comparable for Box<dyn Entity> {
+
+    fn compare(&self, other: &Box<dyn Entity>) -> Ordering {
+
+        console::log_1( &"entity.compare".into() );
+
+        let my_pos =  self.screen_pos();
+        let other_pos = other.screen_pos();
+        let dy = my_pos.y - other_pos.y;
+
+        if dy == 0.0 { Ordering::Equal } 
+        else if dy > 0.0 { Ordering::Greater }
+        else { Ordering::Less}
+
+    }
+}
+
+#[derive()]
 pub struct TileMap {
+    // screen_pos: Pos,
+    // screen_size: Size,
+    map_pos: Pos,
     map_size: Size,
-    screen_pos: Pos,
-    screen_size: Size,
-    tile_size: Size,
-    tile_color: String, 
-    tile_half_width: i32,
-    tile_half_height:i32,
+    pub tile_size: Size,
+    pub tile_color: String, 
+    tile_half_size: Size,
     canvas: HtmlCanvasElement,
-    context: CanvasRenderingContext2d,
+    pub context: CanvasRenderingContext2d,
     images: HashMap<String,HtmlImageElement>,
-    
+    // https://stackoverflow.com/a/51486416/521197
+    render_tiles_layer: Vec<Box<Tile>>,
+    render_entity_layers: [ Vec<Box<dyn Entity>>; 2 ],
 }
 
 #[derive(Default)]
@@ -131,13 +179,27 @@ impl TileMapBuilder {
                 .expect( &expect_msg_3 )
         };
         
-        let mut tilemap = TileMap { 
+        let s_width = format!( "{}", self.screen_size.width);
+        let s_height = format!( "{}", self.screen_size.height);
+
+        console::log_2( &JsValue::from_str(s_width.as_str()), &JsValue::from_str(s_height.as_str()) );
+        // set canvas size
+        let _ = canvas.set_attribute("width",  s_width.as_str());
+        let _ = canvas.set_attribute("height", s_height.as_str());
+
+        let tilemap = TileMap { 
+            // screen_pos: Pos::default(), 
+            // screen_size: self.screen_size,
+            map_pos: Pos { 
+                x: (self.screen_size.width / 2) as f64,
+                y: (self.tile_size.height * 2) as f64,
+            },
             map_size: self.map_size, 
-            screen_pos: Pos::default(), 
-            screen_size: self.screen_size,
             tile_size: self.tile_size,
-            tile_half_height: self.tile_size.height / 2,
-            tile_half_width: self.tile_size.height / 2,
+            tile_half_size: Size { 
+                height: self.tile_size.height / 2,
+                width: self.tile_size.width / 2,
+            },
             tile_color: match &self.color {
                 Some(v) => String::from(v),
                 None => String::from("#15B89A"),
@@ -145,8 +207,12 @@ impl TileMapBuilder {
             canvas, 
             context,
             images: HashMap::new(),
+            render_tiles_layer: Vec::new(),
+            render_entity_layers: [ Vec::new(), Vec::new() ],
 
         };
+
+        
 
         Ok(tilemap)
     }
@@ -160,22 +226,6 @@ impl TileMapBuilder {
 //     }
 // }
 
-
-pub trait Entity<Rhs: ?Sized = Self> : PartialEq<Rhs> where Rhs: Entity  {
-    fn screen_pos(&self) -> &Pos;
-
-    fn render(&self) -> Result<(), Error>;
-
-    fn compare( &self, other: &Self ) -> i32 {
-        let my_pos =  self.screen_pos();
-        let other_pos = other.screen_pos();
-        let dy = my_pos.y - other_pos.y;
-
-        if dy == 0 { my_pos.x - other_pos.x } else { dy }
-    }
-
-}
-
 impl TileMap {
 
     /**
@@ -185,13 +235,102 @@ impl TileMap {
         TileMapBuilder::default()
     }
 
+    fn _clear(&self) {
+        self.context.clear_rect(0.0, 0.0, self.canvas.width() as f64, self.canvas.height() as f64 )
+    } 
+
+    fn _update_layer( &mut self, layer:Layer ) {
+
+        let r_layer = 
+            match layer {
+                Layer::PrismLayer => &mut self.render_entity_layers[ 0 ],
+                Layer::PersonLayer => &mut self.render_entity_layers[ 1 ],
+            };
+        
+        
+        r_layer.sort_by( |a, b | { a.compare( b ) } );
+
+
+    }
+
+    pub fn render(&self) -> Result<(), Error> {
+        // console::log_1( &"isomap.render".into() );
+
+        self._clear();
+
+        for e in self.render_tiles_layer.iter() {
+            let _ = e.render(self);
+        }
+
+        for layer_index in 0..1 {
+            for e in self.render_entity_layers[ layer_index ].iter() {
+                let _ = e.render(self);
+            }         
+        }
+        
+        Ok(())
+    }
+
     /// Get Tile Rect relative to screen pos
     pub fn get_tile_rect( &self, screen_pos: &Pos ) -> TileRect {
+        // topRight:       pos,
+        // bottomLeft:     { x: pos.x - this.tile.width, y: pos.y + this.tile.height },
+        // bottomRight:    { x:pos.x, y: pos.y + this.tile.height },
+        // topLeft:        { x: pos.x - this.tile.width, y: pos.y }
+
         TileRect {
             top_right:       *screen_pos,
-            bottom_left:     Pos { x: screen_pos.x - self.tile_size.width, y: screen_pos.y + self.tile_size.height },
-            bottom_right:    Pos { x: screen_pos.x, y: screen_pos.y + self.tile_size.height },
-            top_left:        Pos { x: screen_pos.x - self.tile_size.width, y: screen_pos.y },
+            bottom_left:     Pos { x: screen_pos.x - self.tile_size.width as f64, y: screen_pos.y + self.tile_size.height as f64 },
+            bottom_right:    Pos { x: screen_pos.x, y: screen_pos.y + self.tile_size.height as f64},
+            top_left:        Pos { x: screen_pos.x - self.tile_size.width as f64, y: screen_pos.y },
+        }
+    }
+
+    pub fn get_tile_vertex( &self, screen_pos: &Pos ) -> TileVertex {
+        // top:    { x: pos.x - this.tile.width/2, y: pos.y  },
+        // left:   { x: pos.x - this.tile.width, y: pos.y + this.tile.height/2 },
+        // right:  { x: pos.x, y: pos.y + this.tile.height/2 },
+        // bottom: { x: pos.x - this.tile.width/2, y: pos.y + this.tile.height }
+
+        TileVertex {
+            top:    Pos { x: screen_pos.x - self.tile_half_size.width as f64, y: screen_pos.y  },
+            left:   Pos { x: screen_pos.x - self.tile_size.width as f64, y: screen_pos.y + self.tile_half_size.height  as f64},
+            right:  Pos { x: screen_pos.x, y: screen_pos.y + self.tile_half_size.height as f64 },
+            bottom: Pos { x: screen_pos.x - self.tile_half_size.width as f64, y: screen_pos.y + self.tile_size.height as f64 }    
+        }
+    }
+
+    /**
+     * 
+     * @param layer 
+     */
+    pub fn add_tiles( &mut self ) {
+
+        // tiles drawing loops
+        for  x  in 0..self.map_size.width {
+            for y in  0..self.map_size.height  {
+                self._add_tile( &Pos { x: x as f64, y: y as f64 } );
+            }
+        }
+
+        self.render_tiles_layer.sort_by( |a, b | { a.compare( b ) });
+    }
+
+    fn _add_tile( &mut self, map_pos: &Pos )  {
+        let screen_pos = self.convert_map_to_screen( map_pos ); 
+        let result = Box::new(Tile::new( screen_pos, *map_pos ));
+        
+        self.render_tiles_layer.push( result );
+    }
+
+    pub fn convert_map_to_screen( &self, tile_pos: &Pos ) -> Pos { 
+        // x: (this.tile.halfWidth * ( tilePos.x - tilePos.y )) + this.mapPos.x, 
+        // y: (this.tile.halfHeight  * ( tilePos.x + tilePos.y )) + this.mapPos.y
+
+        Pos {
+            x: (self.tile_half_size.width as f64 * ( tile_pos.x - tile_pos.y )) + self.map_pos.x, 
+            y: (self.tile_half_size.height as f64 * ( tile_pos.x + tile_pos.y )) + self.map_pos.y
+    
         }
     }
 
@@ -234,15 +373,55 @@ impl TileMap {
             top_left: _,
             bottom_right: _}  = self.get_tile_rect(screen_pos);
 
-        let dy  = y - source.natural_height() as i32;
+        let dy  = y - source.natural_height() as f64;
 
-        match self.context.draw_image_with_html_image_element(source, dx as f64, dy as f64) {
+        match self.context.draw_image_with_html_image_element(source, dx, dy) {
             Ok(()) => Ok(()),
             Err(js_err) => Err(Error::RenderImage(js_err))
 
         }
 
+
     }
+
+    pub fn render_image_scaled( &self, basename: &str, screen_pos: &Pos, to_size: &Size ) {
+        // const img = this.images.get( basename )
+
+        // if( img ) {
+        //     const hRatio = toSize.width  / img.width    ;
+        //     const vRatio =  toSize.height / img.height  ;
+        //     const ratio  = Math.min ( hRatio, vRatio );
+
+        //     const { bottomLeft: {x, y} } = this.getTileRect(screenPos)
+        //     this.context.drawImage( 
+        //         img, 
+        //         0, 0,  
+        //         img.width, img.height,
+        //         x, y - toSize.height,
+        //         img.width*ratio, img.height*ratio
+        //         )    
+        // }
+
+        let img = self.images.get( basename );
+
+        if let  Some(img) = img  {
+
+            let h_ratio = to_size.width  / img.width()    ;
+            let v_ratio =  to_size.height / img.height()  ;
+            let ratio  = std::cmp::min( h_ratio, v_ratio );
+            
+            let TileRect { bottom_left: Pos { x, y }, .. } = self.get_tile_rect( screen_pos );
+
+            let _ = self.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+                img, 
+                0.into(), 0.into(), 
+                img.width().into(), img.height().into(),
+                x, y, 
+                (img.width()*ratio).into(), (img.height()*ratio).into());
+        }
+        
+     } 
+
 
     // pub fn start( &mut self, fps: u16 ) -> Result<(), JsValue>{
 
@@ -262,23 +441,6 @@ impl TileMap {
 
 }   
 
-impl PartialEq for TileMap {
-    fn eq(&self, other: &Self ) -> bool {
-        self.compare(other) == 0
-    }
-}
-
-impl Entity for TileMap {
-
-    fn screen_pos(&self) -> &Pos {
-        &self.screen_pos
-    }
-    
-    fn render(&self) -> Result<(), Error> {
-        console::log_1( &"render".into() );
-        Ok(())
-    }
-}
 
 
 
