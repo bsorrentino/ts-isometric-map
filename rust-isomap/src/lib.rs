@@ -69,7 +69,20 @@ pub async fn init() -> Result<(), wasm_bindgen::JsValue> {
     {
         let mut tilemap  = tilemap().lock().unwrap();
 
-        tilemap.load_images( &["assets/man-ne.png", "assets/man-nw.png"] )
+        let images_to_load = [
+            "assets/man-ne.png", 
+            "assets/man-nw.png", 
+            "assets/man-se.png",
+            "assets/man-sw.png",
+            "assets/tiles/grass01.png",
+            "assets/tiles/rock.png",
+            "assets/tiles/snow.png",
+            "assets/tiles/brickpavers2.png",
+            "assets/tiles/cretebrick970.png",
+            "assets/wall-low-single.png"
+        ];
+
+        tilemap.load_images( &images_to_load )
             .await
             .expect("error loading images");
 
