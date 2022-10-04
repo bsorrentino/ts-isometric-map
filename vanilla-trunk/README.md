@@ -13,3 +13,10 @@ Works only installing last **trunk** release running command below. Refers to [i
 ```
 cargo install trunk --force --git https://github.com/thedodd/trunk.git --branch master
 ```
+
+## Customize init script
+
+* [Exported wasm functions are not exposed to js code (#298)](https://github.com/thedodd/trunk/issues/298)
+* [Add support for inline script tags of … (#390)](https://github.com/thedodd/trunk/pull/390)
+* [Initialization script customization (#184)](https://github.com/thedodd/trunk/pull/184)
+

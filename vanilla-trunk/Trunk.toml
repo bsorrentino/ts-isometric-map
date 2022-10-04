@@ -1,3 +1,4 @@
 [build]
+pattern_script = "<script type=\"module\">import init, { my_rust_function } from '{base}{js}';init('{base}{wasm}').then(()=>my_rust_function());</script>"
 target = "index.html"
 dist = "dist"

@@ -16,6 +16,11 @@ extern "C" {
     fn snippetTest();
 }
 
+#[wasm_bindgen]           
+pub fn my_rust_function() {
+    snippetTest();
+}
+
 fn main() {
     set_panic_hook();
     snippetTest();
