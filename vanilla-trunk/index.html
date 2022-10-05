@@ -8,12 +8,10 @@
     <link data-trunk rel="scss" href="src/index.scss"/>
     <link data-trunk rel="css" href="src/app.css"/>
     <base data-trunk-public-url/>
+    <script data-trunk src="src/script.js" ></script>
 </head>
 <body>
     <link data-trunk rel="rust" href="Cargo.toml" data-wasm-opt="z" data-bin="vanilla-example"/>
-    <script data-trunk src="src/script.js" ></script>
+    <canvas id="canvas" width="1000" height="600"></canvas>
 </body>
-<script >
-    testFromJavaScript()
-</script>
 </html>
